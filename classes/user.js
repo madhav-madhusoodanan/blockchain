@@ -9,11 +9,17 @@
  * 3. Scan for stuff sent to them, and accept/reject them
  * 4. Clean their blockchain and local storage
  * 5. Cover its tracks by adding decoy signatures to transaction
+ * 6. Keep a list of addresses and their timestamp and balance
+ * 7. Anyone with the addresses can verify the blocks and sign over it (and then update)
+ * 8. If any block reaches quorum, 
  *
  * No user can
  * 1. Spam transactions, because of rate-limiter
  * 2. Claim back tokens that are not accepted
+ * 3. Send data by randomly initiating websockets and send data
+ *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
+
 const Signature = require('./signature');
 class User {
   constructor({ blockchain, comm, block_pool, view_Key, spend_key, key_pair }) {

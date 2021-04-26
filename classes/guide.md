@@ -12,7 +12,14 @@ The signature ensures that things are cryptographically secured.
 
 The blockchain is what keeps track of the user's activity.
 Users are required to maintain it (atleast the hashes of the blocks).
-Users can delete it after they get two-thirds majority of the representatives vote.
+Users can delete it after they are verified.
+
+Users can also (optionally) store a list of addresses, their timestamp and balance.
+Any user with that sender address can verify by signing on the block.
+once the balance hit zero, they may safely delete the addresses.
+
+New accounts are supposed to indicate "new" on the block (indicates initial balance as 0)
+else they may risk the possibility of nobody voting on it and failing quorum.
 
 # To do
 <ol>
