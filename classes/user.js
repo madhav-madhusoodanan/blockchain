@@ -22,4 +22,5 @@ class User {
   sign() {}
   scan() {}
   clean() {}
+  static count() {}
 }
