@@ -22,42 +22,56 @@
 
 const Signature = require('./signature');
 class User {
-  constructor({ blockchain, comm, block_pool, view_Key, spend_key, key_pair }) {
+  constructor({ blockchain, comm, block_pool, view_Key, spend_key, key_pair, accounts }) {
     this.blockchain = blockchain;
     this.block_pool = block_pool;
     this.comm = comm;
-    this.spend_key = spend_key;
-    this.view_Key = view_Key;
-    this.key_pair = key_pair;
+    this.accounts = accounts;
+    this.spend_key = spend_key; // simplify this
+    this.view_Key = view_Key;   // simplify this
+    this.key_pair = key_pair;   // simplify this
     this.received = [];
   };
-  send(data) {
+  send(data_chunk) {
     try {
-      await this.comm.send(data);
+      // search for an appropriate account to release data from
+      // and append to its blockchain
+      await this.comm.send(data_chunk);
       return true;
     } catch (error) {
       return false;
     }
+  }
+  receive() {
+    this.received.forEach(block => this.blockchain.add_block("R", block));
   }
   update_pool() {
     try {
-      this.block_pool = await this.comm.receive();
+      this.block_pool.pool = await this.comm.receive();
       return true;
     } catch (error) {
       return false;
     }
   }
-  sign(data) {
-    return Signature.sign(key_pair, data);
+  sign(data_chunk) {
+    return Signature.sign(key_pair, data_chunk);
   }
   scan() {
     this.update_pool();
-    this.received = this.block_pool.map((block) => {
+    this.received = this.block_pool.pool.map((block) => {
       let temporary_block;
       if(temporary_block = Signature.is_for_me(this.view_Key, block && temporary_block))
         return block;
     }
-    )}
+    )
+    receive();
+    this.received = [];
+  }
   clean() {}
-  static count() {} // can we really count the number of users on the system?
+  static count() {} 
+      // can we really count the number of users on the system?
+      // would help in quorum if that was possible
+  join() {}
+  leave() {}
 }
+module.exports = User;

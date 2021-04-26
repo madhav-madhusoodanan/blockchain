@@ -22,3 +22,4 @@ class Signature {
         //  // else return null 
     }
 }
+module.exports = Signature;

@@ -11,8 +11,25 @@
  */
 
 class Blockchain {
-    constructor() {}
-    add_block() {}
+    constructor() {
+        this.balance = 0;
+        this.chain = [];
+    }
+    get chain(chain)
+    {
+        this.chain = chain;
+        this.balance(0);
+    }
+    add_block({type, block}) {
+        // "R" for receive
+        // "S" for send
+        // other letters for different types
+    }
     remove_block() {}
     static is_valid() {}
+    balance(initial_balance){
+        this.balance = this.chain.reduce((prev_total, curr) => (prev_total + curr.money), initial_balance || 0);
+    }
+
 }
+module.exports = Blockchain;

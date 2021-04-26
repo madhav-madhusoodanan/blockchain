@@ -21,6 +21,10 @@ once the balance hit zero, they may safely delete the addresses.
 New accounts are supposed to indicate "new" on the block (indicates initial balance as 0)
 else they may risk the possibility of nobody voting on it and failing quorum.
 
+# Functionality
+The User does all the tasks
+All the other objects just allow the user to do its job faster
+
 # To do
 <ol>
 <li> Confirm the consensus mechanism

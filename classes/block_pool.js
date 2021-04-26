@@ -5,8 +5,19 @@
  * 4. inform other transaction pools
  */
 
-class Transaction_pool {
-    constructor() {}
+class Block_pool {
+    constructor({pool, block_pool_addresses}) {
+        this.addresses = block_pool_addresses;
+        this.pool = pool || [];
+    }
+    get pool(pool)
+    {
+        this.pool = pool;
+    }
+    get addresses(addresses)
+    {
+        this.addresses = addresses;
+    }
     clear() {}
     add() {}
     return_existing() {}
@@ -14,3 +25,4 @@ class Transaction_pool {
     set_map() {}
     clear_if_acepted() {}
 }
+module.expors = Block_pool;

@@ -8,6 +8,7 @@
 
 class Comm {
     constructor() {}
-    send(data) {} // returns a promise
+    send(data_chunk) {} // returns a promise
     receive() {} // returns a promise
 }
+module.exports = Comm;

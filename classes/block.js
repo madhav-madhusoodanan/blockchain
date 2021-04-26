@@ -3,6 +3,9 @@
  * 2. Input and output
  * 3. Amount and/or data (no rate-limiting if amount is zero)
  * 4. Rate-limiting nonce to make an acceptable hash
+ * 
+ * Features
+ * 1. adding a signature is the job of the user/account
  */
 import { cryptoHash } from "./util";
 import { DIFFICULTY } from "../config";
@@ -16,15 +19,15 @@ const TYPE = {
   };
 
 class Block {
-    constructor({money, data, sender_signatures, receiver_address, nonce, hash, random}) {
+    constructor({money, data, receiver_address, lastHash, random}) {
         this.money = money;
         this.data = data;
-        this.sender_signatures = sender_signatures; 
+        this.sender_signatures = []; 
         this.receiver_address = receiver_address;
         this.timestamp = Date.now();
         this.random = random
         this.nonce = 0;
-        this.lastHash = 0;
+        this.lastHash = lastHash;
         this.hash = "";
         this.type = null;
         this.mine();
