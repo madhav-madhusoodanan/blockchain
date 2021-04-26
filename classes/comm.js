@@ -8,6 +8,6 @@
 
 class Comm {
     constructor() {}
-    send() {}
-    receive() {}
+    send(data) {} // returns a promise
+    receive() {} // returns a promise
 }

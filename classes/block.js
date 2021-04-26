@@ -16,16 +16,17 @@ const TYPE = {
   };
 
 class Block {
-    constructor({money, data, sender_signatures, receiver_address, nonce, hash}) {
+    constructor({money, data, sender_signatures, receiver_address, nonce, hash, random}) {
         this.money = money;
         this.data = data;
         this.sender_signatures = sender_signatures; 
         this.receiver_address = receiver_address;
+        this.timestamp = Date.now();
+        this.random = random
         this.nonce = 0;
         this.lastHash = 0;
         this.hash = "";
         this.type = null;
-        this.timestamp = Date.now();
         this.mine();
     }
     static is_valid() {
