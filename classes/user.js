@@ -1,8 +1,7 @@
 /* Every user has
- * 1. A personal blockchain
- * 2. A transaction pool
- * 3. Two pairs of cryptographic keys (view pair and send pair)
- * 4. Local storage for temporary addresses
+ * 1. A transaction pool
+ * 2. Two pairs of cryptographic keys (view pair and send pair)
+ * 3. Local storage for temporary addresses
  * 
  * Every user can
  * 1. Send either tokens or information
