@@ -6,6 +6,7 @@
  * 
  * Features
  * 1. adding a signature is the job of the user/account
+ * 2. -ve money indicates send, +ve money indicates receive
  */
 import { cryptoHash } from "./util";
 import { DIFFICULTY } from "../config";
@@ -19,7 +20,8 @@ const TYPE = {
   };
 
 class Block {
-    constructor({money, data, receiver_address, lastHash, random}) {
+    constructor({initial_balance, money, data, receiver_address, lastHash, random}) {
+        this.initial_balance = initial_balance;
         this.money = money;
         this.data = data;
         this.sender_signatures = []; 

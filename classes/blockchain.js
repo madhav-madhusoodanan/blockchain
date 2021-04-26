@@ -21,8 +21,7 @@ class Blockchain {
         this.balance(0);
     }
     add_block({type, block}) {
-        // "R" for receive
-        // "S" for send
+        // "M" for money
         // other letters for different types
     }
     remove_block() {}

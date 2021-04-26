@@ -16,7 +16,7 @@ class Account {
         this.key_pair = key_pair;
         this.comm = comm;
     }
-    create_block({type, money, data, receiver_address}) {
+    create_block({money, data, receiver_address}) {
         const block = this.blockchain[this.blockchain.chain.length - 1];
         // create a one-time receiver_address and signatures too
         block = new Block({money, data, receiver_address, lastHash: block.hash, random});

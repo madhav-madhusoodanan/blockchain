@@ -6,9 +6,9 @@
  */
 
 class Block_pool {
-    constructor({pool, block_pool_addresses}) {
-        this.addresses = block_pool_addresses;
-        this.pool = pool || [];
+    constructor() {
+        this.addresses = [];
+        this.pool = [];
     }
     get pool(pool)
     {
@@ -19,7 +19,9 @@ class Block_pool {
         this.addresses = addresses;
     }
     clear() {}
-    add() {}
+    add({pool, addresses}) {
+        // verify status
+    }
     return_existing() {}
     return_valid() {}
     set_map() {}
