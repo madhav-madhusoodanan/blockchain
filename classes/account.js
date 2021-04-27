@@ -8,13 +8,15 @@
  * 4. Will create the one-time public account
  */
 import Block from './block';
+import Blockchain from "./blockchain";
+import Comm from "./comm";
 const Signature = require('./signature');
 
 class Account {
-    constructor(blockchain, key_pair, comm) {
-        this.blockchain = blockchain;
+    constructor({blockchain, key_pair, comm}) {
+        this.blockchain = blockchain || new Blockchain();
         this.key_pair = key_pair;
-        this.comm = comm;
+        this.comm = comm || new Comm();
     }
     create_block({money, data, receiver_address}) {
         const block = this.blockchain[this.blockchain.chain.length - 1];
@@ -23,7 +25,9 @@ class Account {
         this.blockchain.chain = [...(this.blockchain.chain), block];
 
     }
-    sign() {}
+    sign() {
+        return Signature.sign(key_pair, data_chunk);
+    }
     clean() {}
 }
 module.exports = Account;

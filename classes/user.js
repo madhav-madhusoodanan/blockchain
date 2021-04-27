@@ -22,32 +22,38 @@
 
 const Signature = require('./signature');
 class User {
-  constructor({ blockchain, comm, block_pool, view_Key, spend_key, key_pair, accounts }) {
+  constructor({ blockchain, comm, block_pool, key_pair, accounts }) {
     this.blockchain = blockchain;
     this.block_pool = block_pool;
     this.comm = comm;
     this.accounts = accounts;
-    this.spend_key = spend_key; // simplify this
-    this.view_Key = view_Key;   // simplify this
     this.key_pair = key_pair;   // simplify this
     this.received = [];
   };
+  get tracking_key() {
+    return [key_pair[0].getPrivate('hex'), key_pair[1].getPublic('hex')];
+  }
+  get private_user_key() {
+    return [key_pair[0].getPrivate('hex'), key_pair[1].getPrivate('hex')];
+  }
   send(data_chunk) {
     try {
       // search for an appropriate account to release data from
+      // create a block, share it
       // and append to its blockchain
-      await this.comm.send(data_chunk);
+      // if account is empty, archive it
+      this.comm.send(data_chunk);
       return true;
     } catch (error) {
       return false;
     }
   }
   receive() {
-    this.received.forEach(block => this.blockchain.add_block("R", block));
+    this.received.forEach(block => this.blockchain.add_block(block));
   }
   update_pool() {
     try {
-      this.block_pool.pool = await this.comm.receive();
+      this.block_pool = this.comm.receive();
       return true;
     } catch (error) {
       return false;
@@ -60,10 +66,9 @@ class User {
     this.update_pool();
     this.received = this.block_pool.pool.map((block) => {
       let temporary_block;
-      if(temporary_block = Signature.is_for_me(this.view_Key, block && temporary_block))
+      if(temporary_block = Signature.is_for_me(this.tracking_Key, block && temporary_block))
         return block;
-    }
-    )
+    })
     receive();
     this.received = [];
   }

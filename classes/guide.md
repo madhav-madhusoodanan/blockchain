@@ -21,13 +21,16 @@ once the balance hit zero, they may safely delete the addresses.
 New accounts are supposed to indicate "new" on the block (indicates initial balance as 0)
 else they may risk the possibility of nobody voting on it and failing quorum.
 
+If a block is accepted and then it passes a day, users are then allowed to delete 
+the block without resending it to others
+
 # Functionality
 The User does all the tasks
 All the other objects just allow the user to do its job faster
 
 # To do
 <ol>
-<li> Confirm the consensus mechanism
+<li> Confirm the consensus mechanism (done)
 <li> Then fill up in this order
     <ol>
     <li> Transaction

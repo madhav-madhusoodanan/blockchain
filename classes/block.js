@@ -13,10 +13,10 @@ import { DIFFICULTY } from "../config";
 import hexToBinary from "hex-to-binary";
 
 const TYPE = {
-    MONEY: "MONEY",
-    DATA: "DATA",
-    NFT: "NFT",
-    SPAM: "SPAM",
+    MONEY: "M",
+    DATA: "D",
+    NFT: "N",
+    SPAM: "S",
   };
 
 class Block {
@@ -40,6 +40,9 @@ class Block {
         //    // find a way to do 1
         // 2. a nonce exists
         
+    }
+    set type(type) {
+      this.type = type;
     }
     mine() {
         if(money && data) this.type = TYPE.NFT;

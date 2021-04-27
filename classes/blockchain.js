@@ -20,7 +20,7 @@ class Blockchain {
         this.chain = chain;
         this.balance(0);
     }
-    add_block({type, block}) {
+    add_block(block) {
         // "M" for money
         // other letters for different types
     }
