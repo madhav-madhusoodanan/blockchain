@@ -22,20 +22,25 @@ class Block_pool {
   clear() {}
   add({ pool, addresses }) {
     // first, preliminary checking
-    this.pool = pool.map((block) => Block.is_valid(block));
+    pool = pool.map((block) => Block.is_valid(block));
+    this.addresses = this.addresses.concat(addresses);
 
-    // then, if it is a receive block, check for a corresponding send block
+    // then, if pool has a receive block, check for a corresponding send block in ths.pool
     // remove both if both match
     // remove just the receive if they dont match
+    // add the pool to this.pool
+    this.pool.concat(pool);
     // look at each block and search for the corresponding sender address
     // if it exists
-    // // 1. update the corresponding address state
+    // // 1. update the corresponding address state if timestamp is newer
+    // // // 1. if that block's meant for you, take it in XD
     // // 2. sign on it
     // // 3. send it to others
     this.pool = this.pool.map((block) => {})
     
     // if an address has new timestamp
   }
+  remove() // accepts an array of block hashes to remove
   return_existing() {}
   return_valid() {}
   set_map() {}

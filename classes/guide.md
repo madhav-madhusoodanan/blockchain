@@ -50,3 +50,11 @@ All the other objects just allow the user to do its job faster
     <li> User
     </ol>
 </ol>
+
+# Checks for basic blockchain completeness
+1. Create a send block
+2. Send it to the network
+3. send it to 1 imaginary person
+4. send that to the receiver
+5. let receiver generate a receive block
+6. send it to the network

@@ -19,14 +19,14 @@
  * 3. Send data by randomly initiating websockets and send data
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
-
+const Block = require('./block');
 const Signature = require('./signature');
 class User {
   constructor({ blockchain, comm, block_pool, key_pair, accounts }) {
     this.blockchain = blockchain;
     this.block_pool = block_pool;
     this.comm = comm;
-    this.accounts = accounts;
+    this.accounts = accounts || [];
     this.key_pair = key_pair;   // simplify this
     this.received = [];
   };
@@ -36,24 +36,41 @@ class User {
   get private_user_key() {
     return [key_pair[0].getPrivate('hex'), key_pair[1].getPrivate('hex')];
   }
-  send(data_chunk) {
+  send({money, data_chunk}) {
     try {
+
       // search for an appropriate account to release data from
-      // create a block, share it
-      // and append to its blockchain
-      // if account is empty, archive it
+      // create a receiver_key and block_public_key
+      // create a block, sign it as sender and then share it
+      const block = new Block({initial_balance : this.blockchain.balance(0), 
+                                money, 
+                                data_chunk, 
+                                receiver_key, 
+                                last_hash : this.blockchain.last().hash[0],
+                                block_public_key
+                              });
       this.comm.send(data_chunk);
+
+      // and append to its blockchain
+      this.blockchain.add_block(block)
+
+      // if account is empty, archive it
       return true;
     } catch (error) {
       return false;
     }
   }
   receive() {
+        // not like send()
+        // makes just a receive block and returns it
+        // finding/creating the account
     this.received.forEach(block => this.blockchain.add_block(block));
+      // replace each block with a receive block
   }
   update_pool() {
     try {
-      this.block_pool = this.comm.receive();
+      const {pool, addresses} = this.comm.receive();
+      this.block_pool.add({pool, addresses});
       return true;
     } catch (error) {
       return false;
@@ -65,12 +82,13 @@ class User {
   scan() {
     this.update_pool();
     this.received = this.block_pool.pool.map((block) => {
-      let temporary_block;
-      if(temporary_block = Signature.is_for_me(this.tracking_Key, block && temporary_block))
-        return block;
-    })
-    receive();
-    this.received = [];
+      const private_key = Signature.is_for_me(this.tracking_Key, block);
+        // find a way to store the private key
+      if(private_key) return block;
+    });
+    receive(); // creates receive blocks for all of em
+    this.block_pool.add({pool : this.received, addresses : []});
+    
   }
   clean() {}
   static count() {} 
