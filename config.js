@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const MINE_RATE = 1000;
 const DIFFICULTY = 3;
-
+const BET_KEEPING_KEY = "hehe-lolol";
 const GENESIS_DATA = {
   timestamp: 1,
   lastHash: "-----",
@@ -29,4 +29,5 @@ module.exports = {
   REWARD_INPUT,
   MINING_REWARD,
   DIFFICULTY,
+  BET_KEEPING_KEY,
 };

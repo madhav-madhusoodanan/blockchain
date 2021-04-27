@@ -18,9 +18,17 @@ Users can also (optionally) store a list of addresses, their timestamp and balan
 Any user with that sender address can verify by signing on the block.
 once the balance hit zero, they may safely delete the addresses.
 
-New accounts are supposed to indicate "new" on the block (indicates initial balance as 0)
-else they may risk the possibility of nobody voting on it and failing quorum.
+Issue: 
+Accounts sending money to an old account, but whose data isnt present with verifier 
 
+Possible Feature(s):
+1. Plead to change a specific detail, and changes occur if proof exists, within some time
+    Like, a block that was accidentally wronged
+
+Opinions needed:
+1. Do we need checks, hashes, etc for information-only blocks? There is nothing to verify, however  verifications may cause longer latency
+2. Data-only blocks without sender signatures can be deleted after 1 hour of their timestamp. Do they need a receive block?
+3. Blocks without a receiver-key are automatically filled with a "bet-keeping-address" key...
 If a block is accepted and then it passes a day, users are then allowed to delete 
 the block without resending it to others
 
