@@ -59,3 +59,6 @@ All the other objects just allow the user to do its job faster
 4. send that to the receiver
 5. let receiver generate a receive block
 6. send it to the network
+
+# Cryptography ideas
+1. implement the <a href ="https://github.com/signalapp/libsignal-protocol-javascript"> Signal app cryptography </a>
