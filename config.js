@@ -12,6 +12,14 @@ const GENESIS_DATA = {
   data: [],
 };
 
+const TYPE = {
+  MONEY: "M",
+  DATA: "D",
+  NFT: "N",
+  SPAM: "S",
+  DATABASE: "D", // if receiver_key is null but sender_keys are present
+};
+
 const STARTING_BALANCE = 1000;
 
 const REWARD_INPUT = {
@@ -29,5 +37,6 @@ module.exports = {
   REWARD_INPUT,
   MINING_REWARD,
   DIFFICULTY,
+  TYPE,
   BET_KEEPING_KEY,
 };

@@ -4,7 +4,12 @@
  * Every signature can
  * 1. Sign on a transaction
  * 2. Return a corresponding private key for a public key sent to it, or null otherwise
+ * 
+ * Notes for developers
+ * 1. Make the signature in such a way that its existing methods are not replaced 
+ *      when the cryptography is changed to a post-quantum cryptography type
  */
+
 const eliptic = require("elliptic");
 const crypto = require("crypto");
 const cryptoHash = require("./util");

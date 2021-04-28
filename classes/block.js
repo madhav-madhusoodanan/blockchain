@@ -9,16 +9,9 @@
  * 2. -ve money indicates send, +ve money indicates receive
  */
 import { cryptoHash } from "./util";
-import { DIFFICULTY, BET_KEEPING_KEY } from "../config";
+import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "../config";
 import hexToBinary from "hex-to-binary";
 
-const TYPE = {
-    MONEY: "M",
-    DATA: "D",
-    NFT: "N",
-    SPAM: "S",
-    DATABASE: "D", // if receiver_key is null but sender_keys are present
-  };
 
 class Block {
     constructor({initial_balance, money, data, receiver_key, last_hash, reference_hash, block_public_key}) {

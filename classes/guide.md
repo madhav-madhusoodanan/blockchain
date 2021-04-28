@@ -11,6 +11,7 @@ The lifetime is defined as the period from its send process to its receive proce
 The signature ensures that things are cryptographically secured.
 
 The blockchain is what keeps track of the user's activity.
+The blocks are arranged chronologically, with newest blocks first.
 Users are required to maintain it (atleast the hashes of the blocks).
 Users can delete it after they are verified.
 
@@ -31,7 +32,7 @@ Opinions needed:
 3. Blocks without a receiver-key are automatically filled with a "bet-keeping-address" key...
 If a block is accepted and then it passes a day, users are then allowed to delete 
 the block without resending it to others
-
+4. is a data_chunk a piece of info that is constant? i hope so...
 # Functionality
 The User does all the tasks
 All the other objects just allow the user to do its job faster

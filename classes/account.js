@@ -19,11 +19,11 @@ class Account {
         this.comm = comm || new Comm();
     }
     create_block({money, data, receiver_address}) {
-        const block = this.blockchain[this.blockchain.chain.length - 1];
+        const block = this.blockchain[0];
+
         // create a one-time receiver_address and signatures too
         block = new Block({money, data, receiver_address, lastHash: block.hash, random});
-        this.blockchain.chain = [...(this.blockchain.chain), block];
-
+        this.blockchain.add_block(block);
     }
     sign() {
         return Signature.sign(key_pair, data_chunk);

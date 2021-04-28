@@ -31,6 +31,9 @@ class Blockchain {
   last() {
     return this.chain[this.chain.length - 1];
   }
+  first() {
+    return this.chain[0];
+  }
   remove_block() {}
   static is_valid() {}
   balance(initial_balance) {
