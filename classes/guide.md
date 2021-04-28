@@ -62,3 +62,10 @@ All the other objects just allow the user to do its job faster
 
 # Cryptography ideas
 1. implement the <a href ="https://github.com/signalapp/libsignal-protocol-javascript"> Signal app cryptography </a>
+
+# Smart contract ideas
+1. it can be written in any lang, starting with javascript -> python -> c/c++ -> etc...
+2. it must be transpiled into JSON (some sort of bytecode representation for now)
+3. will be processed on a sandboxed code execution engine (mostly gonna be <a href="https://www.github.com/engineer-man/piston"> Piston </a>)
+4. learn more to develop this, will have to build modules for the same purpose
+5. prolly even need a web page that can graphically do the job and outputs bytecode (like ibm-q)
