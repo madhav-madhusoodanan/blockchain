@@ -19,7 +19,7 @@
  * 3. Send data by randomly initiating websockets and send data
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
-const { TYPE } = require('../config');
+const { TYPE } = require("../config");
 const Block = require("./block");
 const Signature = require("./signature");
 class User {
@@ -43,16 +43,15 @@ class User {
   send({ money, data_chunk }) {
     try {
       const i = 0;
+      // what if money is null?
+      // then the 1st part of "while" condition is false
       while (money > 0 || data_chunk) {
         const balance = this.accounts[i].blockchain.balance(0);
 
         // create a receiver_key and block_public_key
         const block = new Block({
           initial_balance: this.blockchain.balance(0),
-          money:
-            money > balance
-              ? balance
-              : money,
+          money: money > balance ? -1 * balance : -1 * money, // -ve money for send blocks
           data_chunk,
           receiver_key,
           last_hash: this.accounts[i].blockchain.first().hash[0],
@@ -65,21 +64,20 @@ class User {
 
         // if the block was a spam block, dont transact and continue
         // can happen if the first few blocks have zero balance
-        if(block.type === TYPE.SPAM) continue;
+        if (block.type === TYPE.SPAM) continue;
 
         // add signatures also
-        // and append to its blockchain
+        // and append to its blockchain after updating MONEY
         this.accounts[i].blockchain.add_block(block);
-        this.comm.send(data_chunk);
+        this.accounts[i].comm.send(data_chunk);
       }
 
       // if account is empty, archive it
-      this.accounts.forEach(account => {
-        if(!account.blockchain.balance(0))
-        {
+      this.accounts.forEach((account) => {
+        if (!account.blockchain.balance(0)) {
           // archive!
         }
-      })
+      });
       return true;
     } catch (error) {
       return false;
@@ -88,9 +86,14 @@ class User {
   receive() {
     // not like send()
     // makes just a receive block and returns it
+    // 1. check if you have addresses of same private key
+    // 2. mostly gonna be a no. build an account
     // finding/creating the account
-    this.received.forEach((block) => this.blockchain.add_block(block));
     // replace each block with a receive block
+    this.received.forEach((block) => {
+      // find / make the account into account
+      account.create_block(block);
+    });
   }
   update_pool() {
     try {
@@ -111,13 +114,14 @@ class User {
       // find a way to store the private key within the block
       if (private_key) return block;
     });
-    receive(); // creates receive blocks for all of em
+    this.receive(); // creates receive blocks for all of em
     this.block_pool.add({ pool: this.received, addresses: [] });
   }
   clean() {}
   static count() {}
   // can we really count the number of users on the system?
   // would help in quorum if that was possible
+  // possible ig: counting the number of websocket channels at any time
   join() {}
   leave() {}
 }

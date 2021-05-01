@@ -1,3 +1,8 @@
+# developer note
+Start with an mvp dude
+build a blockchain first
+then make it as a library/api
+
 # Guide
 Start with user.js.
 Its is where all the classes' code come together.
@@ -19,10 +24,8 @@ Users can also (optionally) store a list of addresses, their timestamp and balan
 Any user with that sender address can verify by signing on the block.
 once the balance hit zero, they may safely delete the addresses.
 
-Issue: 
-Accounts sending money to an old account, but whose data isnt present with verifier 
 
-Possible Feature(s):
+# Possible Feature(s):
 1. Plead to change a specific detail, and changes occur if proof exists, within some time
     Like, a block that was accidentally wronged
 
@@ -32,7 +35,9 @@ Opinions needed:
 3. Blocks without a receiver-key are automatically filled with a "bet-keeping-address" key...
 If a block is accepted and then it passes a day, users are then allowed to delete 
 the block without resending it to others
-4. is a data_chunk a piece of info that is constant? i hope so...
+4. Is a data_chunk a piece of info that is constant? i hope so...
+5. send blocks always have -ve money, receive blocks always have +ve money 
+6. Private_key -> bigNum, Public_key -> curve.g.mul(bigNum) :)
 # Functionality
 The User does all the tasks
 All the other objects just allow the user to do its job faster
@@ -62,10 +67,12 @@ All the other objects just allow the user to do its job faster
 
 # Cryptography ideas
 1. implement the <a href ="https://github.com/signalapp/libsignal-protocol-javascript"> Signal app cryptography </a>
+2. gpu/asic resistance -> smart contract must be turing complete, 1 block mustn't fit in the cache
 
 # Smart contract ideas
-1. it can be written in any lang, starting with javascript -> python -> c/c++ -> etc...
+1. it can be written in any lang, starting with javascript -> python -> c/c++ -> etc...(markdown/latex?)
 2. it must be transpiled into JSON (some sort of bytecode representation for now)
 3. will be processed on a sandboxed code execution engine (mostly gonna be <a href="https://www.github.com/engineer-man/piston"> Piston </a>)
 4. learn more to develop this, will have to build modules for the same purpose
 5. prolly even need a web page that can graphically do the job and outputs bytecode (like ibm-q)
+6. consider a contract like an NFT. if it changes, then its invalidated and the runner is not rewarded

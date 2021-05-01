@@ -63,6 +63,9 @@ class Block {
     set verifications(verification) {
       this.verifications.append(verification);
     }
+    set money(money) {
+      this.money = money;
+    }
     mine() {
               // is this field even needed?
         if(!money && data) {

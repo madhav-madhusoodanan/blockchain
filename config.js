@@ -13,11 +13,13 @@ const GENESIS_DATA = {
 };
 
 const TYPE = {
-  MONEY: "M",
+    // combinations are possible
+  DATABASE: "B", // if receiver_key is null but sender_keys are present
+  CONTRACT: "C",
   DATA: "D",
+  MONEY: "M",
   NFT: "N",
   SPAM: "S",
-  DATABASE: "D", // if receiver_key is null but sender_keys are present
 };
 
 const STARTING_BALANCE = 1000;
