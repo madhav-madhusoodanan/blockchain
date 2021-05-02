@@ -23,22 +23,25 @@ const { TYPE } = require("../config");
 const Block = require("./block");
 const Signature = require("./signature");
 class User {
+  // declaration of private fields
+  #key_pair;
+
   constructor({ blockchain, comm, block_pool, key_pair, accounts }) {
     this.blockchain = blockchain;
     this.block_pool = block_pool;
     this.comm = comm;
     this.accounts = accounts || [];
-    this.key_pair = key_pair; // simplify this
+    this.#key_pair = key_pair; // this is an array of 2 key pairs
     this.received = [];
     this.accounts.sort(
       (a, b) => a.blockchain.balance(0) - b.blockchain.balance(0)
     );
   }
   get tracking_key() {
-    return [key_pair[0].getPrivate("hex"), key_pair[1].getPublic("hex")];
+    return [this.#key_pair[0].getPrivate("hex"), this.#key_pair[1].getPublic("hex")];
   }
   get private_user_key() {
-    return [key_pair[0].getPrivate("hex"), key_pair[1].getPrivate("hex")];
+    return [this.#key_pair[0].getPrivate("hex"), this.#key_pair[1].getPrivate("hex")];
   }
   send({ money, data_chunk }) {
     try {
@@ -105,7 +108,7 @@ class User {
     }
   }
   sign(data_chunk) {
-    return Signature.sign(key_pair, data_chunk);
+    return Signature.sign(this.#key_pair, data_chunk);
   }
   scan() {
     this.update_pool();

@@ -11,15 +11,18 @@ import Block from "./block";
 import Blockchain from "./blockchain";
 import Comm from "./comm";
 import { GENESIS_DATA } from "../config";
-import elliptic from "elliptic";
 const Signature = require("./signature");
+import { genKeyPair } from "./util";
 
 class Account {
+  // declaration of private fields
+  #key_pair;
+  
   constructor({ blockchain, key_pair, private_key, comm }) {
     this.blockchain = blockchain || new Blockchain();
 
-    if (key_pair || private_key)  this.key_pair = key_pair || elliptic.ec("curve25519").keyFromPrivate(private_key);
-    else this.key_pair = elliptic.ec("curve25519").genKeyPair();
+    if (key_pair) this.#key_pair = key_pair;
+    else this.#key_pair = genKeyPair({private_key});
 
     this.comm = comm || new Comm();
     this.blockchain.add_block(GENESIS_DATA);
@@ -38,7 +41,8 @@ class Account {
     this.blockchain.add_block(block);
   }
   sign() {
-    return Signature.sign(key_pair, data_chunk);
+    // will this private method work?
+    return Signature.sign(this.#key_pair, data_chunk);
   }
   clean() {}
 }

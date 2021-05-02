@@ -1,5 +1,16 @@
-const obj = {money: 12, data: "hehe"};
-const func = ({money}) => {
-    console.log(money);
+class House {
+  #cost;
+  constructor({ cost, name }) {
+    this.#cost = cost;
+    this.name = name;
+  }
 }
-func(obj);
+House.prototype.read = () => {
+  this.name = "kol";
+  return this.name;
+}
+
+const obj1 = new House({ cost: 10, name: "woo" });
+console.log(obj1.read());
+
+// console.log(obj2); // false
