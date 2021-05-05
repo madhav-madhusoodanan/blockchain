@@ -61,7 +61,7 @@ class User {
           block_public_key,
         });
 
-        money -= balance;
+        money -= (money > balance ?  balance :  money);
         ++i;
         data_chunk = null;
 
