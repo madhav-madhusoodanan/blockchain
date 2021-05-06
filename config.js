@@ -13,13 +13,25 @@ const GENESIS_DATA = {
 };
 
 const TYPE = {
-    // combinations are possible
+  // combinations are possible
   DATABASE: "B", // if receiver_key is null but sender_keys are present
   CONTRACT: "C",
   DATA: "D",
   MONEY: "M",
   NFT: "N",
   SPAM: "S",
+};
+
+const ASSIGN_TYPE = (block) => {
+  // is this field even needed?
+  if (!block.#money && block.#data) {
+    if (!block.#receiver_key && block.#sender_signatures)
+      return TYPE.DATABASE;
+    else return TYPE.DATA;
+  } // kept it at first to optimise speed
+  else if (money && data) return TYPE.NFT;
+  else if (money) return TYPE.MONEY;
+  else return TYPE.SPAM;
 };
 
 const STARTING_BALANCE = 1000;
@@ -41,4 +53,5 @@ module.exports = {
   DIFFICULTY,
   TYPE,
   BET_KEEPING_KEY,
+  ASSIGN_TYPE,
 };

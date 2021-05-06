@@ -10,8 +10,8 @@
  *      when the cryptography is changed to a post-quantum cryptography type
  */
 
-const eliptic = require("elliptic");
-const crypto = require("crypto");
+// const elliptic = require("elliptic");
+// const crypto = require("crypto");
 const cryptoHash = require("./util");
 
 class Signature {

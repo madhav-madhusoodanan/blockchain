@@ -3,6 +3,8 @@ Start with an mvp dude
 build a blockchain first
 then make it as a library/api
 
+in the future, extend to webRTC and hyper-optimization
+
 # To do
 <ol>
 <li> Confirm the consensus mechanism (done)
@@ -38,3 +40,13 @@ then make it as a library/api
 4. learn more to develop this, will have to build modules for the same purpose
 5. prolly even need a web page that can graphically do the job and outputs bytecode (like ibm-q)
 6. consider a contract like an NFT. if it changes, then its invalidated and the runner is not rewarded
+
+# Opinions needed:
+1. Do we need checks, hashes, etc for information-only blocks? There is nothing to verify, however  verifications may cause longer latency
+2. Data-only blocks without sender signatures can be deleted after 1 hour of their timestamp. Do they need a receive block?
+3. Blocks without a receiver-key are automatically filled with a "bet-keeping-address" key...
+If a block is accepted and then it passes a day, users are then allowed to delete 
+the block without resending it to others
+4. Is a data_chunk a piece of info that is constant? i hope so...
+5. send blocks always have -ve money, receive blocks always have +ve money 
+6. Private_key -> bigNum, Public_key -> curve.g.mul(bigNum) :)

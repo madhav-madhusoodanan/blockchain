@@ -20,48 +20,51 @@
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
 const { TYPE } = require("../config");
-const Block = require("./block");
 const Signature = require("./signature");
+const Account = require("./account");
 class User {
   // declaration of private fields
   #key_pair;
+  #accounts;
 
-  constructor({ blockchain, comm, block_pool, key_pair, accounts }) {
-    this.blockchain = blockchain;
+  constructor({ comm, block_pool, key_pair, accounts }) {
     this.block_pool = block_pool;
     this.comm = comm;
-    this.accounts = accounts || [];
+    this.#accounts = accounts || [];
     this.#key_pair = key_pair; // this is an array of 2 key pairs
     this.received = [];
-    this.accounts.sort(
-      (a, b) => a.blockchain.balance(0) - b.blockchain.balance(0)
+    this.#accounts.sort(
+      // ascending order of balance
+      (a, b) => a.balance - b.balance
     );
   }
   get tracking_key() {
-    return [this.#key_pair[0].getPrivate("hex"), this.#key_pair[1].getPublic("hex")];
+    return [
+      this.#key_pair[0].getPrivate("hex"),
+      this.#key_pair[1].getPublic("hex"),
+    ];
   }
   get private_user_key() {
-    return [this.#key_pair[0].getPrivate("hex"), this.#key_pair[1].getPrivate("hex")];
+    return [
+      this.#key_pair[0].getPrivate("hex"),
+      this.#key_pair[1].getPrivate("hex"),
+    ];
   }
-  send({ money, data_chunk }) {
+  send({ money, data_chunk, receiver_address }) {
     try {
       const i = 0;
       // what if money is null?
       // then the 1st part of "while" condition is false
       while (money > 0 || data_chunk) {
-        const balance = this.accounts[i].blockchain.balance(0);
+        const balance = this.#accounts[i].balance;
 
-        // create a receiver_key and block_public_key
-        const block = new Block({
-          initial_balance: this.blockchain.balance(0),
-          money: money > balance ? -1 * balance : -1 * money, // -ve money for send blocks
-          data_chunk,
-          receiver_key,
-          last_hash: this.accounts[i].blockchain.first().hash[0],
-          block_public_key,
+        const block = this.#accounts[i].create_block({
+          money: money > balance ? -1 * balance : -1 * money,
+          data,
+          receiver_address,
         });
 
-        money -= balance;
+        money += block.money;
         ++i;
         data_chunk = null;
 
@@ -69,15 +72,12 @@ class User {
         // can happen if the first few blocks have zero balance
         if (block.type === TYPE.SPAM) continue;
 
-        // add signatures also
-        // and append to its blockchain after updating MONEY
-        this.accounts[i].blockchain.add_block(block);
-        this.accounts[i].comm.send(data_chunk);
+        this.comm.send(block);
       }
 
       // if account is empty, archive it
-      this.accounts.forEach((account) => {
-        if (!account.blockchain.balance(0)) {
+      this.#accounts.forEach((account) => {
+        if (!account.balance) {
           // archive!
         }
       });
@@ -90,12 +90,20 @@ class User {
     // not like send()
     // makes just a receive block and returns it
     // 1. check if you have addresses of same private key
-    // 2. mostly gonna be a no. build an account
+    // 2. mostly gonna be a NO. build an account
     // finding/creating the account
     // replace each block with a receive block
     this.received.forEach((block) => {
-      // find / make the account into account
-      account.create_block(block);
+      // construct the private key into private_key
+      const index = this.#accounts.findIndex(
+        (account) => account.public_key === block.receiver_key
+      );
+      if (index < 0) {
+        const account = new Account({ private_key });
+        account.receive(block);
+      } else {
+        this.#accounts[index].receive(block);
+      }
     });
   }
   update_pool() {
@@ -124,7 +132,7 @@ class User {
   static count() {}
   // can we really count the number of users on the system?
   // would help in quorum if that was possible
-  // possible ig: counting the number of websocket channels at any time
+  // possible i guess: counting the number of websocket channels at any time
   join() {}
   leave() {}
 }

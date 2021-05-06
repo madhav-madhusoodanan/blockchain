@@ -15,7 +15,7 @@ class Blockchain {
     this.balance = 0;
     this.chain = [];
   }
-  get chain(chain) {
+  set chain(chain) {
     this.chain = chain;
     this.balance(0);
   }
@@ -42,6 +42,7 @@ class Blockchain {
       (prev_total, curr) => prev_total + curr.money,
       initial_balance || 0
     );
+    return this.balance;
   }
 }
 module.exports = Blockchain;

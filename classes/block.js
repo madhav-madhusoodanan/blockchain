@@ -7,9 +7,10 @@
  * Features
  * 1. adding a signature is the job of the user/account
  * 2. -ve money indicates send, +ve money indicates receive
+ * 3. private data members ensures data security
  */
 import { cryptoHash } from "./util";
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "../config";
+import { DIFFICULTY, BET_KEEPING_KEY, ASSIGN_TYPE } from "../config";
 import hexToBinary from "hex-to-binary";
 
 class Block {
@@ -47,7 +48,8 @@ class Block {
     this.#hash[0] = null; // hash representation of block
     this.#hash[1] = last_hash || null; // hash of last block in blockchain
     this.#hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
-    this.#type = "";
+    this.#type = null;
+    this.assign_type();
     this.mine();
   }
   get initial_balance() {
@@ -81,15 +83,13 @@ class Block {
     return this.#hash;
   }
   set type(type) {
-    // change ths so that security is maintained
-    this.#type = type;
+      // one-time type casting
+    if(!this.#type) this.#type = type;
   }
   set verifications(verification) {
     this.#verifications.append(verification);
   }
-  // set money(money) {
-  //   this.#money = money;
-  // }
+
   static is_valid(block) {
     // data-only blocks return true
     if (!block.money) return true;
@@ -117,16 +117,11 @@ class Block {
     // the block-pool will verify state changes...dont worry
   }
 
+  assign_type()
+  {
+    this.#type = ASSIGN_TYPE(this);
+  }
   mine() {
-    // is this field even needed?
-    if (!this.#money && this.#data) {
-      if (!this.#receiver_key && this.#sender_signatures)
-        this.#type = TYPE.DATABASE;
-      else this.#type = TYPE.DATA;
-    } // kept it at first to optimise speed
-    else if (money && data) this.#type = TYPE.NFT;
-    else if (money) this.#type = TYPE.MONEY;
-    else this.#type = TYPE.SPAM;
 
     if (this.#money) {
       do {
