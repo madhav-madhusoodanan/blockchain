@@ -33,7 +33,7 @@ class Block {
     data,
     receiver_key,
     last_hash,
-    reference_hash,
+    reference_hash, // for receive blocks to reference send blocks
     block_public_key,
   }) {
     this.#initial_balance = initial_balance || null;
@@ -41,10 +41,10 @@ class Block {
     this.#data = data || null;
     this.#sender_signatures = [];
     this.#verifications = []; // proof of ppl 'yes'-ing its authenticity
-    this.#receiver_key = receiver_key;
+    this.#receiver_key = receiver_key || null;
     this.#timestamp = Date.now();
-    this.#block_public_key = block_public_key; // the destination address
-    this.#nonce = 0;
+    this.#block_public_key = block_public_key || null; // the destination address
+    this.#nonce = null; // null + number = number, so its okay :)
     this.#hash[0] = null; // hash representation of block
     this.#hash[1] = last_hash || null; // hash of last block in blockchain
     this.#hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
@@ -86,7 +86,7 @@ class Block {
       // one-time type casting
     if(!this.#type) this.#type = type;
   }
-  set verifications(verification) {
+  set add_verifications(verification) {
     this.#verifications.append(verification);
   }
 

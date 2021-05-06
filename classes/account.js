@@ -10,8 +10,7 @@
 import Block from "./block";
 import Blockchain from "./blockchain";
 import { GENESIS_DATA } from "../config";
-const Signature = require("./signature");
-import { genKeyPair } from "./util";
+import { genKeyPair, cryptoHash } from "./util";
 
 class Account {
   // declaration of private fields
@@ -33,51 +32,36 @@ class Account {
   get balance() {
     return this.blockchain.balance(this.base_balance);
   }
-  send({money, data, receiver_address}) {
-    // make the block , add it and return it
-    const balance = this.balance;
-
-    // create a receiver_key and block_public_key
-    const block = new Block({
-      initial_balance: balance,
-      money: money > balance ? -1 * balance : -1 * money, // -ve money for send blocks
-      data,
-      receiver_key,
-      last_hash: this.blockchain.first().hash[0],
-      block_public_key,
-    });
-
-
-
-  }
   receive(block) {
     // make the block , add it and return it
   }
-  create_block({ money, data, receiver_address }) {
+  create_block({ money, data, reference_hash, receiver_address }) {
     // keep tight block validity checking here
     // create a one-time receiver_address and signatures too
     // money is already negative if it is a send block
     const balance = this.balance;
 
-    // create a receiver_key and block_public_key
+    // create a receiver_key and block_public_key from receiver_address
+    // if its a receive block then it is null
     const block = new Block({
       initial_balance: balance,
       money, //: money > balance ? -1 * balance : -1 * money, // -ve money for send blocks
       data,
       receiver_key,
+      reference_hash,
       last_hash: this.blockchain.first().hash[0],
       block_public_key,
     });
 
     this.sign(block);
-    // else make just a normal signature
     this.blockchain.add_block(block);
 
     return block;
   }
-  sign(block) {
+  sign(data_chunk) {
     // // add rng signatures only if block is a send block
-    return Signature.sign(this.#key_pair, data_chunk);
+    // else make just a normal signature
+    return this.#key_pair.sign(cryptoHash(data_chunk));
   }
   clean() {}
 }

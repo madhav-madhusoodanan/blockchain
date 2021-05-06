@@ -20,13 +20,14 @@ const TYPE = {
   MONEY: "M",
   NFT: "N",
   SPAM: "S",
+  NO_RECEIVE: "R", // when no_receive block and when money is zero
+                   // work not done on it yet
 };
 
 const ASSIGN_TYPE = (block) => {
   // is this field even needed?
   if (!block.#money && block.#data) {
-    if (!block.#receiver_key && block.#sender_signatures)
-      return TYPE.DATABASE;
+    if (!block.#receiver_key && block.#sender_signatures) return TYPE.DATABASE;
     else return TYPE.DATA;
   } // kept it at first to optimise speed
   else if (money && data) return TYPE.NFT;

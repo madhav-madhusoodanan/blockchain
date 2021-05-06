@@ -9,7 +9,7 @@ transaction_pool.js outlines how a transaction will be handled during its lifeti
 The lifetime is defined as the period from its send process to its receive process.
 
 The signature ensures that things are cryptographically secured.
-Ring signatures are made only for send blocks.
+Ring signatures and receiver data are made only for send blocks.
 
 The blockchain is what keeps track of the user's activity.
 The blocks are arranged chronologically, with newest blocks first.

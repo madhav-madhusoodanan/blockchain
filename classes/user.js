@@ -20,8 +20,8 @@
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
 const { TYPE } = require("../config");
-const Signature = require("./signature");
 const Account = require("./account");
+const cryptoHash = require("./util");
 class User {
   // declaration of private fields
   #key_pair;
@@ -53,6 +53,7 @@ class User {
   send({ money, data_chunk, receiver_address }) {
     try {
       const i = 0;
+      if (money < 0) money = 0; // no problem if money is negative then
       // what if money is null?
       // then the 1st part of "while" condition is false
       while (money > 0 || data_chunk) {
@@ -87,36 +88,45 @@ class User {
     }
   }
   receive() {
-    // not like send()
-    // makes just a receive block and returns it
-    // 1. check if you have addresses of same private key
-    // 2. mostly gonna be a NO. build an account
-    // finding/creating the account
-    // replace each block with a receive block
+    /* not like send()
+     * makes just a receive block and returns it
+     * 1. check if you have addresses of same private key
+     * 2. mostly gonna be a NO. build an account
+     * finding/creating the account
+     * replace each block with a receive block
+     */
+
     this.received.forEach((block) => {
-      // construct the private key into private_key
+      if (block.money > 0) return; // will not accept send blocks of +ve money
       const index = this.#accounts.findIndex(
         (account) => account.public_key === block.receiver_key
       );
       if (index < 0) {
+        // no existing account is found
         const account = new Account({ private_key });
-        account.receive(block);
+        const block = account.create_block({
+          money: -1 * block.money, // transform the block money
+          data: block.data,
+        });
       } else {
-        this.#accounts[index].receive(block);
+        // there is an account
+        this.#accounts[index].create_block({
+          money: -1 * block.money, // transform the block money
+          data: block.data,
+        });
       }
     });
   }
   update_pool() {
     try {
-      const { pool, addresses } = this.comm.receive();
-      this.block_pool.add({ pool, addresses });
+      this.block_pool.add(this.comm.receive()); // transit data type: { pool, addresses }
       return true;
     } catch (error) {
       return false;
     }
   }
   sign(data_chunk) {
-    return Signature.sign(this.#key_pair, data_chunk);
+    return this.#key_pair.sign(cryptoHash(data_chunk));
   }
   scan() {
     this.update_pool();

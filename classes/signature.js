@@ -16,9 +16,7 @@ const cryptoHash = require("./util");
 
 class Signature {
     constructor() {}
-    static sign(key_pair, data) {
-        return key_pair.sign(cryptoHash(data));
-    }
+
     static is_for_me(view_key, block) {
         // 1. Take the random data
         // 2. calculate P'

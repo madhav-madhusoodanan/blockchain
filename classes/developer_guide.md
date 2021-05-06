@@ -19,6 +19,7 @@ in the future, extend to webRTC and hyper-optimization
     <li> User
     </ol>
 <li> convert things that are supposed to be immutable into an object of private data types
+<li> add functionality for NO_RECEIVE blocks
 </ol>
 
 # Checks for basic blockchain completeness
