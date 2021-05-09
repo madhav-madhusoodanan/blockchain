@@ -1,9 +1,6 @@
-const arr = [null, 2, 6, -1, 5];
+const EventEmitter = require("events");
+const event = new EventEmitter();
 
-arr.sort((a, b) => {
-  return a - b;
-});
-
-console.log(arr);
-
-// console.log(obj2); // false
+let arr = [1, 2, 3, 4, 5];
+arr.sort((a, b) => a-b);
+console.log(arr)

@@ -19,7 +19,6 @@
  * 3. Send data by randomly initiating websockets and send data
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
-const { TYPE } = require("../config");
 const Account = require("./account");
 const cryptoHash = require("./util");
 class User {
@@ -34,11 +33,11 @@ class User {
     this.#key_pair = key_pair; // this is an array of 2 key pairs
     this.received = [];
     this.#accounts.sort(
-      // ascending order of balance
-      (a, b) => a.balance - b.balance
+      (a, b) => a.balance - b.balance // ascending order of balance
     );
   }
   get tracking_key() {
+    // should hex be changed to default type?
     return [
       this.#key_pair[0].getPrivate("hex"),
       this.#key_pair[1].getPublic("hex"),
@@ -50,36 +49,59 @@ class User {
       this.#key_pair[1].getPrivate("hex"),
     ];
   }
-  send({ money, data_chunk, receiver_address }) {
+  send({
+    money,
+    data_chunk,
+    receiver_address,
+    tags /* only for independent types */,
+  }) {
     try {
-      const i = 0;
-      if (money < 0) money = 0; // no problem if money is negative then
-      // what if money is null?
-      // then the 1st part of "while" condition is false
-      while (money > 0 || data_chunk) {
-        const balance = this.#accounts[i].balance;
-
-        const block = this.#accounts[i].create_block({
+      let i = 0;
+      if (money < 0 || money === Infinity) money = 0;
+      else if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
+        const block = this.#accounts[0].create_block({
           money: money > balance ? -1 * balance : -1 * money,
           data,
           receiver_address,
+          tags,
         });
 
-        money += block.money;
-        ++i;
-        data_chunk = null;
-
-        // if the block was a spam block, dont transact and continue
-        // can happen if the first few blocks have zero balance
-        if (block.type === TYPE.SPAM) continue;
-
         this.comm.send(block);
-      }
+      } else {
+        // no problem if money is negative or Infinity then (above)
+        // what if money is null?
+        // then the 1st part of "while" condition is false (below)
+        while (money > 0 || data_chunk) {
+          const balance = this.#accounts[i].balance;
+          const block = this.#accounts[i].create_block({
+            money: money > balance ? -1 * balance : -1 * money,
+            data,
+            receiver_address,
+            tags,
+          });
 
+          money += block.money;
+          ++i;
+          data_chunk = null;
+
+          // if the block was a spam block, dont transact and continue
+          // can happen if the first few blocks have zero balance
+          // zero balance may appear due to empty accounts
+          // usually only archived accounts have Infinity balance
+          if (block.type.is_spam || balance === Infinity) continue;
+
+          this.comm.send(block);
+          this.#accounts.sort(
+            (a, b) => a.balance - b.balance // ascending order of balance
+          );
+        }
+      }
       // if account is empty, archive it
       this.#accounts.forEach((account) => {
         if (!account.balance) {
           // archive!
+          account.balance = Infinity;
+          // that way all these "archived" accounts will be at the end or the accounts array
         }
       });
       return true;
@@ -104,22 +126,24 @@ class User {
       if (index < 0) {
         // no existing account is found
         const account = new Account({ private_key });
-        const block = account.create_block({
+        block = account.create_block({
           money: -1 * block.money, // transform the block money
           data: block.data,
+          reference_hash: block.hash[0],
         });
       } else {
         // there is an account
         this.#accounts[index].create_block({
           money: -1 * block.money, // transform the block money
           data: block.data,
+          reference_hash: block.hash[0],
         });
       }
     });
   }
   update_pool() {
     try {
-      this.block_pool.add(this.comm.receive()); // transit data type: { pool, addresses }
+      this.block_pool.add(this.comm.receive()); // transit data type: { new_receive, new_send, addresses, network }
       return true;
     } catch (error) {
       return false;
@@ -130,13 +154,14 @@ class User {
   }
   scan() {
     this.update_pool();
-    this.received = this.block_pool.pool.map((block) => {
+    this.received = this.block_pool.pool.new_send.map((block) => {
       const private_key = Signature.is_for_me(this.tracking_Key, block);
       // find a way to store the private key within the block
       if (private_key) return block;
     });
     this.receive(); // creates receive blocks for all of em
     this.block_pool.add({ pool: this.received, addresses: [] });
+    this.comm.send(this.comm)
   }
   clean() {}
   static count() {}

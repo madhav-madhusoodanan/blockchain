@@ -10,7 +10,7 @@
  * 3. private data members ensures data security
  */
 import { cryptoHash } from "./util";
-import { DIFFICULTY, BET_KEEPING_KEY, ASSIGN_TYPE } from "../config";
+import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "../config";
 import hexToBinary from "hex-to-binary";
 
 class Block {
@@ -25,8 +25,8 @@ class Block {
   #nonce;
   #hash;
   #type;
+  #sender_public;
 
-  
   constructor({
     initial_balance,
     money,
@@ -35,10 +35,13 @@ class Block {
     last_hash,
     reference_hash, // for receive blocks to reference send blocks
     block_public_key,
+    sender_public,
+    tags,
   }) {
     this.#initial_balance = initial_balance || null;
     this.#money = money || null;
     this.#data = data || null;
+    this.sender_public = sender_public;
     this.#sender_signatures = [];
     this.#verifications = []; // proof of ppl 'yes'-ing its authenticity
     this.#receiver_key = receiver_key || null;
@@ -48,8 +51,7 @@ class Block {
     this.#hash[0] = null; // hash representation of block
     this.#hash[1] = last_hash || null; // hash of last block in blockchain
     this.#hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
-    this.#type = null;
-    this.assign_type();
+    this.#type = new TYPE(money, data, tags);
     this.mine();
   }
   get initial_balance() {
@@ -82,9 +84,12 @@ class Block {
   get hash() {
     return this.#hash;
   }
-  set type(type) {
-      // one-time type casting
-    if(!this.#type) this.#type = type;
+  get sender_public() {
+    return this.sender_public;
+  }
+  get type() {
+    // one-time type casting
+    return this.#type;
   }
   set add_verifications(verification) {
     this.#verifications.append(verification);
@@ -93,9 +98,9 @@ class Block {
   static is_valid(block) {
     // data-only blocks return true
     if (!block.money) return true;
-    // A block is valid if:
-    // 1. a nonce exists
-    else if (!block.nonce) return false;
+    // A block is valid if a nonce exists
+    // Not valid if money is Infinity
+    else if (!block.nonce || block.money === Infinity) return false;
     // hashes exist
     else if (!block.receiver_key) block.receiver_key = BET_KEEPING_KEY;
     // 2. hash is verified
@@ -117,12 +122,7 @@ class Block {
     // the block-pool will verify state changes...dont worry
   }
 
-  assign_type()
-  {
-    this.#type = ASSIGN_TYPE(this);
-  }
   mine() {
-
     if (this.#money) {
       do {
         ++this.#nonce;

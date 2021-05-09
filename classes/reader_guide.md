@@ -10,6 +10,7 @@ The lifetime is defined as the period from its send process to its receive proce
 
 The signature ensures that things are cryptographically secured.
 Ring signatures and receiver data are made only for send blocks.
+also, send blocks are made in such a way that the identity of the sender is irrelevant :(
 
 The blockchain is what keeps track of the user's activity.
 The blocks are arranged chronologically, with newest blocks first.
