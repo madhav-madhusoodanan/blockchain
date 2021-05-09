@@ -84,7 +84,7 @@ class User {
           ++i;
           data_chunk = null;
 
-          // if the block was a spam block, dont transact and continue
+          // if the block was a spam block, dont transact and continue 
           // can happen if the first few blocks have zero balance
           // zero balance may appear due to empty accounts
           // usually only archived accounts have Infinity balance
