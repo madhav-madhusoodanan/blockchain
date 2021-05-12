@@ -97,7 +97,8 @@ class Block {
 
   static is_valid(block) {
     // data-only blocks return true
-    if (!block.money) return true;
+    if (!block) return false;
+    else if (!block.money) return true;
     // A block is valid if a nonce exists
     // Not valid if money is Infinity
     else if (!block.nonce || block.money === Infinity) return false;

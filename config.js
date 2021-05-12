@@ -24,13 +24,17 @@ class TYPE {
     if (!(tag instanceof Array)) return false;
     else {
       tags.forEach((tag) => {
-        if(tag === "data") this.#type = this.#type | 1;
-        else if(tag === "speed") this.#type = this.#type | 32; // kept it here for efficiency
-        else if(tag === "nft") this.#type = this.#type | 2;
-        else if(tag === "money") this.#type = this.#type | 4;
-        else if(tag === "db") this.#type = this.#type | 8;
-        else if(tag === "contract") this.#type = this.#type | 16;
-        else if(tag === "noreply") this.#type = this.#type | 64;
+        // check if we can reduce the size
+
+        // a |= 1 is the exact same as a = a | 1, (bitwise OR operation)
+        if(tag === "data") this.#type |= 1; 
+        else if(tag === "speed") this.#type |= 32; // kept it here for efficiency
+        else if(tag === "nft") this.#type |= 2;
+        else if(tag === "money") this.#type |= 4;
+        else if(tag === "db") this.#type |= 8;
+        else if(tag === "contract") this.#type |= 16;
+        else if(tag === "noreply") this.#type |= 64;
+        else if(tag === "loan") this.#type |= 128; 
       });
       // add additional checks
       return true;

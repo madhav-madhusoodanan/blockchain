@@ -20,6 +20,7 @@
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
 const Account = require("./account");
+const Block = require("./block");
 const cryptoHash = require("./util");
 class User {
   // declaration of private fields
@@ -28,10 +29,10 @@ class User {
 
   constructor({ comm, block_pool, key_pair, accounts }) {
     this.block_pool = block_pool;
-    this.comm = comm;
     this.#accounts = accounts || [];
     this.#key_pair = key_pair; // this is an array of 2 key pairs
     this.received = [];
+    this.comm = comm || new Comm(public_user_key);
     this.#accounts.sort(
       (a, b) => a.balance - b.balance // ascending order of balance
     );
@@ -49,9 +50,15 @@ class User {
       this.#key_pair[1].getPrivate("hex"),
     ];
   }
+  get public_user_key() {
+    return [
+      this.#key_pair[0].getPublic("hex"),
+      this.#key_pair[1].getPublic("hex"),
+    ];
+  }
   send({
     money,
-    data_chunk,
+    data,
     receiver_address,
     tags /* only for independent types */,
   }) {
@@ -60,19 +67,21 @@ class User {
       if (money < 0 || money === Infinity) money = 0;
       else if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
         const block = this.#accounts[0].create_block({
-          money: money > balance ? -1 * balance : -1 * money,
+          money: 0,
           data,
           receiver_address,
           tags,
         });
 
-        this.comm.send(block);
+        if (Block.is_valid(block)) this.comm.send(block);
       } else {
         // no problem if money is negative or Infinity then (above)
         // what if money is null?
         // then the 1st part of "while" condition is false (below)
-        while (money > 0 || data_chunk) {
+        while (money > 0 || data) {
           const balance = this.#accounts[i].balance;
+          if (block.type.is_spam || balance === Infinity) continue;
+
           const block = this.#accounts[i].create_block({
             money: money > balance ? -1 * balance : -1 * money,
             data,
@@ -80,22 +89,23 @@ class User {
             tags,
           });
 
-          money += block.money;
-          ++i;
-          data_chunk = null;
+          if (Block.is_valid(block)) {
+            money += block.money;
+            ++i;
+            data = null;
+            this.comm.send(block);
+          } else ++i;
 
-          // if the block was a spam block, dont transact and continue 
+          // if the block was a spam block, dont transact and continue
           // can happen if the first few blocks have zero balance
           // zero balance may appear due to empty accounts
           // usually only archived accounts have Infinity balance
-          if (block.type.is_spam || balance === Infinity) continue;
-
-          this.comm.send(block);
-          this.#accounts.sort(
-            (a, b) => a.balance - b.balance // ascending order of balance
-          );
         }
       }
+      if (money) throw new Error("insufficient Balance. Emptied it");
+      this.#accounts.sort(
+        (a, b) => a.balance - b.balance // ascending order of balance
+      );
       // if account is empty, archive it
       this.#accounts.forEach((account) => {
         if (!account.balance) {
@@ -127,7 +137,7 @@ class User {
         // no existing account is found
         const account = new Account({ private_key });
         block = account.create_block({
-          money: -1 * block.money, // transform the block money
+          money: -1 * block.money, // transform the block money to +ve number
           data: block.data,
           reference_hash: block.hash[0],
         });
@@ -154,14 +164,17 @@ class User {
   }
   scan() {
     this.update_pool();
-    this.received = this.block_pool.pool.new_send.map((block) => {
+    this.received = this.block_pool.new_send.map((block) => {
       const private_key = Signature.is_for_me(this.tracking_Key, block);
       // find a way to store the private key within the block
       if (private_key) return block;
     });
     this.receive(); // creates receive blocks for all of em
-    this.block_pool.add({ pool: this.received, addresses: [] });
-    this.comm.send(this.comm)
+    this.block_pool.add({ pool: this.received });
+    this.comm.send({
+      new_receive: this.block_pool.new_receive,
+      new_send: this.block_pool.new_send,
+    });
   }
   clean() {}
   static count() {}
