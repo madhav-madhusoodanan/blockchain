@@ -10,7 +10,7 @@
 import Block from "./block";
 import Blockchain from "./blockchain";
 import { GENESIS_DATA } from "../config";
-import { genKeyPair, cryptoHash } from "./util";
+import { genKeyPair, bignum, cryptoHash as SHA256 } from "./util";
 
 class Account {
   // declaration of private fields
@@ -39,6 +39,7 @@ class Account {
     // make the block , add it and return it
   }
   create_block({ money, data, reference_hash, receiver_address, tags }) {
+    // receiver_address is an array of public keys
     // keep tight block validity checking here
     // create a one-time receiver_address and signatures too
     // money is already negative if it is a send block
@@ -46,6 +47,16 @@ class Account {
 
     // create a receiver_key and block_public_key from receiver_address
     // if its a receive block then it is null
+    
+    const random_key = genKeyPair(); // R = rG
+    // verify and optimize the steps below
+    var r = bignum(random_key.getPrivate('hex'), 16);
+    var A = bignum(receiver_address[0], 16);
+    var B = bignum(receiver_address[1], 16);
+    const random_key_2 = genKeyPair({private_key: SHA256(r.mul(A))});
+    var temp = bignum(random_key_2.getPublic('hex'), 16);
+    var receiver_key = temp.add(B); // receiver_key is of type bignum
+
     const block = new Block({
       initial_balance: balance,
       money, //: money > balance ? -1 * balance : -1 * money, // -ve money for send blocks
@@ -53,8 +64,8 @@ class Account {
       receiver_key,
       reference_hash,
       last_hash: this.blockchain.first().hash[0],
-      block_public_key,
-      sender_public: this.key_pair.getPublic(),
+      block_public_key: bignum(random_key.getPublic('hex'), 16),
+      sender_public: bignum(this.key_pair.getPublic('hex'), 16),
       tags,
     });
 
@@ -66,7 +77,7 @@ class Account {
   sign(data_chunk) {
     // // add rng signatures only if block is a send block
     // else make just a normal signature
-    return this.#key_pair.sign(cryptoHash(data_chunk));
+    return this.#key_pair.sign(SHA256(data_chunk));
   }
   clean() {}
 }

@@ -8,6 +8,7 @@
  * 1. adding a signature is the job of the user/account
  * 2. -ve money indicates send, +ve money indicates receive
  * 3. private data members ensures data security
+ * 4. receiver_key is of type bignum
  */
 import { cryptoHash } from "./util";
 import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "../config";
@@ -51,7 +52,7 @@ class Block {
     this.#hash[0] = null; // hash representation of block
     this.#hash[1] = last_hash || null; // hash of last block in blockchain
     this.#hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
-    this.#type = new TYPE(money, data, tags);
+    this.#type = new TYPE(tags);
     this.mine();
   }
   get initial_balance() {

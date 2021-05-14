@@ -15,13 +15,13 @@
  *
  * No user can
  * 1. Spam transactions, because of rate-limiter
- * 2. Claim back tokens that are not accepted
+ * 2. Claim back tokens that are not accepted (poor send blocks)
  * 3. Send data by randomly initiating websockets and send data
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
  */
-const Account = require("./account");
-const Block = require("./block");
-const cryptoHash = require("./util");
+import Account from "./account";
+import Block from "./block";
+import { cryptoHash as SHA256, bignum, genKeyPair } from "./util";
 class User {
   // declaration of private fields
   #key_pair;
@@ -160,7 +160,7 @@ class User {
     }
   }
   sign(data_chunk) {
-    return this.#key_pair.sign(cryptoHash(data_chunk));
+    return this.#key_pair.sign(SHA256(data_chunk));
   }
   scan() {
     this.update_pool();
@@ -175,6 +175,26 @@ class User {
       new_receive: this.block_pool.new_receive,
       new_send: this.block_pool.new_send,
     });
+  }
+  is_for_me(block) {
+    // 1. Take the random data
+    // var R = block.block_public_key;
+    var a = bignum(this.#key_pair[0].getPrivate("hex"), 16);
+    var temp_key = genKeyPair({
+      private_key: SHA256(a.mul(block.block_public_key)),
+    });
+    var B = bignum(this.#key_pair[1].getPublic("hex"));
+    var temp = bignum(temp_key.getPublic("hex"), 16);
+    // 2. calculate P'
+    var P_prime = temp.add(B);
+    // 3. If P' = P(receiver address in the block)
+    //  // then return its private key
+    //  // else return null
+    if (P_prime === block.receiver_key) {
+      temp = bignum(temp_key.getPrivate("hex"), 16);
+      var b = bignum(this.#key_pair[1].getPrivate("hex"), 16);
+      return b.add(temp);
+    } else return null;
   }
   clean() {}
   static count() {}

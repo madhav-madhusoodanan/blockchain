@@ -1,7 +1,8 @@
-const crypto = require("crypto");
+import { createHash } from "crypto";
 
+// variable argument number
 const cryptoHash = (...inputs) => {
-  const hash = crypto.createHash("sha256");
+  const hash = createHash("sha256");
 
   hash.update(
     inputs

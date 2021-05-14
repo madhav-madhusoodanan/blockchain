@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "jest run"
   },
   "dependencies": {
     "hex-to-binary": "^1.0.1",
