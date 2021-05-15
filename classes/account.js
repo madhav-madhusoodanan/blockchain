@@ -81,4 +81,4 @@ class Account {
   }
   clean() {}
 }
-module.exports = Account;
+export default Account;

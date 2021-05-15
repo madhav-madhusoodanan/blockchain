@@ -23,14 +23,11 @@ class Blockchain {
     // "M" for money
     // other letters for different types
     if (Block.is_valid(block)) {
-      this.chain.append(block);
-        // replace append with something that inserts blocks to the first
+      this.chain = [block, ...this.chain];
+      // adds blocks to the start
       return true;
     }
     else return false
-  }
-  last() {
-    return this.chain[this.chain.length - 1];
   }
   first() {
     return this.chain[0];

@@ -9,26 +9,27 @@ import io from "socket.io-client";
 class Comm {
     constructor(public_user_key) {
         this.comm = io();
-        this.raw = [];
+        this.data = []; // temporary storage
         // job of the server to handle the rooms
-        socket.emit("join", { public_user_key }, (error) => {
+        this.comm.emit("join", { public_user_key }, (error) => {
             if (error) {
               alert(error);
             }
           });
-          socket.on("data", (data) => {
-              this.raw.append(data);
+          this.comm.on("data", (data) => {
+              this.data.append(data);
           });
     }
     // data_chunk must always be in object/json format
     send(data_chunk) {
         // format the data structure
-        socket.emit("data", data_chunk);
+        this.comm.emit("data", data_chunk);
     } 
     receive() {
         // format the data
-        return this.raw;
-        this.raw = [];
+        var data = this.data;
+        this.data = [];
+        return data;    
     } // returns {new_send, new_receive, addresses, network}
 }
-module.exports = Comm;
+export default Comm;

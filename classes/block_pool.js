@@ -38,7 +38,7 @@ class Block_pool {
 
     if (new_send) {
       new_send = new_send.map((block) => {
-        if (Block.is_valid(block)) return block;
+        if (Block.is_valid(block) && block.money <= 0) return block;
         else;
       });
       new_send.forEach((send) => {
@@ -57,7 +57,7 @@ class Block_pool {
 
     if (new_receive) {
       new_receive = new_receive.map((block) => {
-        if (Block.is_valid(block)) return block;
+        if (Block.is_valid(block) && block.money >= 0) return block;
         else;
       });
       new_receive.forEach((receive) => {
@@ -109,4 +109,4 @@ class Block_pool {
   set_map() {}
   clear_if_acepted() {}
 }
-module.expors = Block_pool;
+export default Block_pool;

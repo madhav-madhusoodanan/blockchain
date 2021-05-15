@@ -18,9 +18,22 @@
  * 2. Claim back tokens that are not accepted (poor send blocks)
  * 3. Send data by randomly initiating websockets and send data
  *    i. They must be properly logged in, jwt and refresh tokens etc etc can help
+ *
+ * Every signature has
+ * 1. Two pairs of keys (view key and power key)
+ *
+ * Every signature can
+ * 1. Sign on a transaction
+ * 2. Return a corresponding private key for a public key sent to it, or null otherwise
+ *
+ * Notes for developers
+ * 1. Make the signature in such a way that its existing methods are not replaced
+ *      when the cryptography is changed to a post-quantum cryptography type
  */
 import Account from "./account";
 import Block from "./block";
+import Comm from "./comm";
+import Block_pool from "./block_pool";
 import { cryptoHash as SHA256, bignum, genKeyPair } from "./util";
 class User {
   // declaration of private fields
@@ -28,11 +41,23 @@ class User {
   #accounts;
 
   constructor({ comm, block_pool, key_pair, accounts }) {
-    this.block_pool = block_pool;
+    this.block_pool = block_pool || new Block_pool;
     this.#accounts = accounts || [];
     this.#key_pair = key_pair; // this is an array of 2 key pairs
     this.received = [];
-    this.comm = comm || new Comm(public_user_key);
+    this.comm =
+      comm ||
+      new Comm(
+        `${{
+          A: this.#key_pair[0].getPublic("hex"),
+          B: this.#key_pair[1].getPublic("hex"),
+        }}`
+      );
+    this.comm.comm.on("data", (data) => {
+      this.update_pool(data);
+      this.scan();
+    });
+    
     this.#accounts.sort(
       (a, b) => a.balance - b.balance // ascending order of balance
     );
@@ -103,17 +128,20 @@ class User {
         }
       }
       if (money) throw new Error("insufficient Balance. Emptied it");
-      this.#accounts.sort(
-        (a, b) => a.balance - b.balance // ascending order of balance
-      );
       // if account is empty, archive it
       this.#accounts.forEach((account) => {
         if (!account.balance) {
           // archive!
           account.balance = Infinity;
           // that way all these "archived" accounts will be at the end or the accounts array
+          // when it is sorted
         }
       });
+
+      this.#accounts.sort(
+        (a, b) => a.balance - b.balance // ascending order of balance
+      );
+
       return true;
     } catch (error) {
       return false;
@@ -128,32 +156,40 @@ class User {
      * replace each block with a receive block
      */
 
-    this.received.forEach((block) => {
-      if (block.money > 0) return; // will not accept send blocks of +ve money
+    this.received.forEach(({ block, private_key }) => {
       const index = this.#accounts.findIndex(
         (account) => account.public_key === block.receiver_key
       );
       if (index < 0) {
-        // no existing account is found
+        // no existing account is found, most common
         const account = new Account({ private_key });
-        block = account.create_block({
+        const new_block = account.create_block({
           money: -1 * block.money, // transform the block money to +ve number
           data: block.data,
           reference_hash: block.hash[0],
         });
+        if (new_block) {
+          this.#accounts.push(account);
+          return new_block;
+        } else return;
       } else {
         // there is an account
-        this.#accounts[index].create_block({
+        const new_block = this.#accounts[index].create_block({
           money: -1 * block.money, // transform the block money
           data: block.data,
           reference_hash: block.hash[0],
         });
+        if (new_block) {
+          this.#accounts.push(account);
+          return new_block;
+        } else return;
       }
     });
   }
-  update_pool() {
+  update_pool(data) {
     try {
-      this.block_pool.add(this.comm.receive()); // transit data type: { new_receive, new_send, addresses, network }
+      // transit data type: { new_receive, new_send, addresses, network }
+      this.block_pool.add(data); // the pool makes sure only legit blocks are passed
       return true;
     } catch (error) {
       return false;
@@ -163,34 +199,40 @@ class User {
     return this.#key_pair.sign(SHA256(data_chunk));
   }
   scan() {
-    this.update_pool();
     this.received = this.block_pool.new_send.map((block) => {
-      const private_key = Signature.is_for_me(this.tracking_Key, block);
+      if (block.money > 0) return;
+      const private_key = this.is_for_me(block);
       // find a way to store the private key within the block
-      if (private_key) return block;
+      if (private_key) return { block, private_key };
     });
     this.receive(); // creates receive blocks for all of em
-    this.block_pool.add({ pool: this.received });
+    this.block_pool.add({ new_receive: this.received });
     this.comm.send({
       new_receive: this.block_pool.new_receive,
       new_send: this.block_pool.new_send,
     });
   }
   is_for_me(block) {
+    // memory refresher: if private key is a, then public key is A = aG
+    // where G is generator in elliptic curve
+
     // 1. Take the random data
     // var R = block.block_public_key;
-    var a = bignum(this.#key_pair[0].getPrivate("hex"), 16);
+    var a = bignum(this.#key_pair[0].getPrivate("hex"), 16); // a is 1st private key
+    // making key-pair whose private key is SHA256 hash of (a*R)
     var temp_key = genKeyPair({
       private_key: SHA256(a.mul(block.block_public_key)),
     });
-    var B = bignum(this.#key_pair[1].getPublic("hex"));
+    var B = bignum(this.#key_pair[1].getPublic("hex")); // 2nd public key
     var temp = bignum(temp_key.getPublic("hex"), 16);
-    // 2. calculate P'
+    // 2. calculate P' = SHA256(a*R)G + B
     var P_prime = temp.add(B);
     // 3. If P' = P(receiver address in the block)
     //  // then return its private key
     //  // else return null
     if (P_prime === block.receiver_key) {
+      // private key (p) for the one time account is SHA256(a*R) + b
+      // so that P = pG
       temp = bignum(temp_key.getPrivate("hex"), 16);
       var b = bignum(this.#key_pair[1].getPrivate("hex"), 16);
       return b.add(temp);
@@ -202,6 +244,10 @@ class User {
   // would help in quorum if that was possible
   // possible i guess: counting the number of websocket channels at any time
   join() {}
-  leave() {}
+  leave() {
+    this.comm.comm.disconnect();
+    // clear the block_pool, keep the addresses
+    // try to "save" user data locally
+  }
 }
 module.exports = User;

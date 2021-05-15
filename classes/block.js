@@ -148,4 +148,4 @@ class Block {
   update() {}
 }
 
-module.exports = Block;
+export default Block;

@@ -1,4 +1,8 @@
-const arr = [1, 2, 3, 4];
-arr.find(elem => elem === 2) = 7;
+import { EventEmitter } from "events";
+const event = new EventEmitter();
 
-console.log(arr);
+const obj = { num1: 1, num2: 2 };
+
+event.on("event", callback);
+
+event.emit("event", )

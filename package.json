@@ -2,11 +2,12 @@
   "name": "blockchain",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "jest run"
+    "test": "jest"
   },
   "dependencies": {
     "hex-to-binary": "^1.0.1",

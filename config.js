@@ -27,14 +27,15 @@ class TYPE {
         // check if we can reduce the size
 
         // a |= 1 is the exact same as a = a | 1, (bitwise OR operation)
-        if(tag === "data") this.#type |= 1; 
-        else if(tag === "speed") this.#type |= 32; // kept it here for efficiency
-        else if(tag === "nft") this.#type |= 2;
-        else if(tag === "money") this.#type |= 4;
-        else if(tag === "db") this.#type |= 8;
-        else if(tag === "contract") this.#type |= 16;
-        else if(tag === "noreply") this.#type |= 64;
-        else if(tag === "loan") this.#type |= 128; 
+        // if regex search is successful, the index number is returned or else -1 is
+        if(tag.search(/data/) + 1) this.#type |= 1; 
+        else if(tag.search(/speed/) + 1) this.#type |= 32; // kept it here for efficiency
+        else if(tag.search(/nft/) + 1 ) this.#type |= 2;
+        else if(tag.search(/money/) + 1) this.#type |= 4;
+        else if(tag.search(/db/) + 1) this.#type |= 8;
+        else if(tag.search(/contract/) + 1) this.#type |= 16;
+        else if(tag.search(/noreply/) + 1) this.#type |= 64;
+        else if(tag.search(/loan/) + 1) this.#type |= 128; 
       });
       // add additional checks
       return true;
