@@ -41,7 +41,7 @@ class User {
   #accounts;
 
   constructor({ comm, block_pool, key_pair, accounts }) {
-    this.block_pool = block_pool || new Block_pool;
+    this.block_pool = block_pool || new Block_pool();
     this.#accounts = accounts || [];
     this.#key_pair = key_pair; // this is an array of 2 key pairs
     this.received = [];
@@ -57,7 +57,7 @@ class User {
       this.update_pool(data);
       this.scan();
     });
-    
+
     this.#accounts.sort(
       (a, b) => a.balance - b.balance // ascending order of balance
     );
