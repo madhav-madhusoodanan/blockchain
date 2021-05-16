@@ -7,10 +7,10 @@
  * 3. Acts like a normal account as in Nanocurrency
  * 4. Will create the one-time public account
  */
-import Block from "./block";
-import Blockchain from "./blockchain";
-import { GENESIS_DATA } from "../config";
-import { genKeyPair, bignum, cryptoHash as SHA256 } from "./util";
+const Block = require("./block");
+const Blockchain = require("./blockchain");
+const { GENESIS_DATA } = require("../config");
+const { genKeyPair, SHA256, genPublic } = require("./util");
 
 class Account {
   // declaration of private fields
@@ -35,9 +35,6 @@ class Account {
   set balance(balance) {
     this.base_balance = balance;
   }
-  receive(block) {
-    // make the block , add it and return it
-  }
   create_block({ money, data, reference_hash, receiver_address, tags }) {
     // receiver_address is an array of public keys
     // keep tight block validity checking here
@@ -47,15 +44,18 @@ class Account {
 
     // create a receiver_key and block_public_key from receiver_address
     // if its a receive block then it is null
-    
-    const random_key = genKeyPair(); // R = rG
+
+    var random_key = genKeyPair(); // R = rG
     // verify and optimize the steps below
-    var r = bignum(random_key.getPrivate('hex'), 16);
-    var A = bignum(receiver_address[0], 16);
-    var B = bignum(receiver_address[1], 16);
-    const random_key_2 = genKeyPair({private_key: SHA256(r.mul(A))});
-    var temp = bignum(random_key_2.getPublic('hex'), 16);
-    var receiver_key = temp.add(B); // receiver_key is of type bignum
+    var r = random_key.getPrivate();
+    // make the below more efficient)
+    var A = genPublic(receiver_address[0]);
+    var B = genPublic(receiver_address[1]);
+
+    var random_key_2 = genKeyPair(SHA256(A.mul(r)));
+    A = r = null;
+    var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type BN
+    B = null;
 
     const block = new Block({
       initial_balance: balance,
@@ -64,12 +64,12 @@ class Account {
       receiver_key,
       reference_hash,
       last_hash: this.blockchain.first().hash[0],
-      block_public_key: bignum(random_key.getPublic('hex'), 16),
-      sender_public: bignum(this.key_pair.getPublic('hex'), 16),
+      block_public_key: random_key.getPublic(), // let this specifically be of type point
+      sender_public: this.#key_pair.getPublic("hex"),
       tags,
     });
 
-    this.sign(block);
+    block.add_verifications = this.sign(block.hash[0]);
     this.blockchain.add_block(block);
 
     return block;
@@ -77,8 +77,8 @@ class Account {
   sign(data_chunk) {
     // // add rng signatures only if block is a send block
     // else make just a normal signature
-    return this.#key_pair.sign(SHA256(data_chunk));
+    return this.#key_pair.sign(data_chunk);
   }
   clean() {}
 }
-export default Account;
+module.exports = Account;

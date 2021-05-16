@@ -34,7 +34,7 @@ import Account from "./account";
 import Block from "./block";
 import Comm from "./comm";
 import Block_pool from "./block_pool";
-import { cryptoHash as SHA256, bignum, genKeyPair } from "./util";
+import { SHA256, genKeyPair, genPublic } from "./util";
 class User {
   // declaration of private fields
   #key_pair;
@@ -48,10 +48,10 @@ class User {
     this.comm =
       comm ||
       new Comm(
-        `${{
-          A: this.#key_pair[0].getPublic("hex"),
-          B: this.#key_pair[1].getPublic("hex"),
-        }}`
+        `${SHA256(
+          this.#key_pair[0].getPublic("hex"),
+          this.#key_pair[1].getPublic("hex")
+        )}`
       );
     this.comm.comm.on("data", (data) => {
       this.update_pool(data);
@@ -69,12 +69,15 @@ class User {
       this.#key_pair[1].getPublic("hex"),
     ];
   }
-  get private_user_key() {
-    return [
-      this.#key_pair[0].getPrivate("hex"),
-      this.#key_pair[1].getPrivate("hex"),
-    ];
-  }
+
+  // i guess the below is pretty useless
+  // get private_user_key() {
+  //   return [
+  //     this.#key_pair[0].getPrivate("hex"),
+  //     this.#key_pair[1].getPrivate("hex"),
+  //   ];
+  // }
+
   get public_user_key() {
     return [
       this.#key_pair[0].getPublic("hex"),
@@ -114,7 +117,7 @@ class User {
             tags,
           });
 
-          if (Block.is_valid(block)) {
+          if (block.is_valid()) {
             money += block.money;
             ++i;
             data = null;
@@ -218,23 +221,23 @@ class User {
 
     // 1. Take the random data
     // var R = block.block_public_key;
-    var a = bignum(this.#key_pair[0].getPrivate("hex"), 16); // a is 1st private key
+    var a = this.#key_pair[0].getPrivate(); // a is 1st private key
     // making key-pair whose private key is SHA256 hash of (a*R)
-    var temp_key = genKeyPair({
-      private_key: SHA256(a.mul(block.block_public_key)),
-    });
-    var B = bignum(this.#key_pair[1].getPublic("hex")); // 2nd public key
-    var temp = bignum(temp_key.getPublic("hex"), 16);
+    var temp_key = genKeyPair(
+      SHA256(block.block_public_key.mul(a)) // block.block_public_key is of type Point
+    );
+    var B = this.#key_pair[1].getPublic(); // 2nd public key
+    var temp = temp_key.getPublic();
     // 2. calculate P' = SHA256(a*R)G + B
     var P_prime = temp.add(B);
     // 3. If P' = P(receiver address in the block)
     //  // then return its private key
     //  // else return null
-    if (P_prime === block.receiver_key) {
+    if (P_prime.eq(genPublic(block.receiver_key))) {
       // private key (p) for the one time account is SHA256(a*R) + b
       // so that P = pG
-      temp = bignum(temp_key.getPrivate("hex"), 16);
-      var b = bignum(this.#key_pair[1].getPrivate("hex"), 16);
+      temp = temp_key.getPrivate();
+      var b = this.#key_pair[1].getPrivate();
       return b.add(temp);
     } else return null;
   }

@@ -1,11 +1,11 @@
 // these use jest functions
 const Block = require("../block");
+const Account = require("../account");
 
 describe("Block", () => {
-  let data, block;
-
-  beforeEach(() => {
-    data = `bar`;
+  it("generates a block that is valid", () => {
+    const data = `bar`;
+    const
     const block = new Block({
       initial_balance: 0,
       money: 30,
@@ -17,9 +17,6 @@ describe("Block", () => {
       sender_public: "send",
       tags: ["data", "money"],
     });
-  });
-
-  it("generates a block that is valid", () => {
     expect(Block.is_valid(block)).toEqual(true);
   });
 });

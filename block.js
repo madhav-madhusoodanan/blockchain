@@ -10,7 +10,7 @@
  * 3. private data members ensures data security
  * 4. receiver_key is of type bignum
  */
-import { cryptoHash } from "./util";
+import { cryptoHash, verifySignature } from "./util";
 import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "../config";
 import hexToBinary from "hex-to-binary";
 
@@ -39,10 +39,11 @@ class Block {
     sender_public,
     tags,
   }) {
+    this.#hash = [null, null, null];
     this.#initial_balance = initial_balance || null;
     this.#money = money || null;
     this.#data = data || null;
-    this.sender_public = sender_public;
+    this.#sender_public = sender_public;
     this.#sender_signatures = [];
     this.#verifications = []; // proof of ppl 'yes'-ing its authenticity
     this.#receiver_key = receiver_key || null;
@@ -96,26 +97,34 @@ class Block {
     this.#verifications.append(verification);
   }
 
-  static is_valid(block) {
+  is_valid() {
     // data-only blocks return true
-    if (!block) return false;
-    else if (!block.money) return true;
+    if (!this) return false;
+    else if (!this.money) return true;
     // A block is valid if a nonce exists
     // Not valid if money is Infinity
-    else if (!block.nonce || block.money === Infinity) return false;
+    else if (!this.nonce || this.money === Infinity) return false;
     // hashes exist
-    else if (!block.receiver_key) block.receiver_key = BET_KEEPING_KEY;
+    else if (!this.receiver_key) this.receiver_key = BET_KEEPING_KEY;
     // 2. hash is verified
-    else if (!block.hash[0] && !block.hash[1]) return false;
+    else if (!this.hash[0] || !this.hash[1]) return false;
+    else if (
+      !verifySignature({
+        publicKey: this.sender_public /* type hex string */,
+        data: this.hash[0],
+        signature: this.verifications[0],
+      })
+    )
+      return false;
     else {
       const hash = cryptoHash(
-        block.timestamp,
-        block.hash[1],
-        block.data,
-        block.money,
-        block.receiver_key,
-        block.nonce,
-        block.initial_balance
+        this.timestamp,
+        this.hash[1],
+        this.data,
+        this.money,
+        this.receiver_key,
+        this.nonce,
+        this.initial_balance
       );
       return (
         hexToBinary(hash).substring(0, DIFFICULTY) === "0".repeat(DIFFICULTY)

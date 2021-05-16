@@ -1,7 +1,7 @@
-import { createHash } from "crypto";
+const { createHash } = require("crypto");
 
 // variable argument number
-const cryptoHash = (...inputs) => {
+const SHA256 = (...inputs) => {
   const hash = createHash("sha256");
 
   hash.update(
@@ -14,4 +14,4 @@ const cryptoHash = (...inputs) => {
   return hash.digest("hex");
 };
 
-export default cryptoHash;
+module.exports = SHA256;
