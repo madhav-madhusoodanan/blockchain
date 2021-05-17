@@ -9,8 +9,7 @@
  */
 const Block = require("./block");
 const Blockchain = require("./blockchain");
-const { GENESIS_DATA } = require("../config");
-const { genKeyPair, SHA256, genPublic } = require("./util");
+const { genKeyPair, SHA256, genPublic } = require("../util");
 
 class Account {
   // declaration of private fields
@@ -20,21 +19,24 @@ class Account {
     this.blockchain = blockchain || new Blockchain();
 
     if (key_pair) this.#key_pair = key_pair;
-    else this.#key_pair = genKeyPair({ private_key });
+    else this.#key_pair = genKeyPair(private_key);
     // its okay even if private key is null
 
-    this.blockchain.add_block(GENESIS_DATA);
     this.base_balance = 0; // will come in necessary when clearing blockchains
   }
-  get public_key() {
-    return this.#key_pair.getPublic("hex");
+
+  get lock() {
+    return this.#key_pair.getPublic().encode("hex");
+  }
+
+  // key is present only for debugging
+  get key() {
+    return this.#key_pair.getPrivate("hex");
   }
   get balance() {
     return this.blockchain.balance(this.base_balance);
   }
-  set balance(balance) {
-    this.base_balance = balance;
-  }
+
   create_block({ money, data, reference_hash, receiver_address, tags }) {
     // receiver_address is an array of public keys
     // keep tight block validity checking here
@@ -54,18 +56,17 @@ class Account {
 
     var random_key_2 = genKeyPair(SHA256(A.mul(r)));
     A = r = null;
-    var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type BN
+    var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type point
     B = null;
-
     const block = new Block({
       initial_balance: balance,
-      money, //: money > balance ? -1 * balance : -1 * money, // -ve money for send blocks
+      money, 
       data,
-      receiver_key,
+      receiver_key: genPublic(receiver_key),
       reference_hash,
-      last_hash: this.blockchain.first().hash[0],
-      block_public_key: random_key.getPublic(), // let this specifically be of type point
-      sender_public: this.#key_pair.getPublic("hex"),
+      last_hash: /* this.blockchain.first().hash[0] || */ "dead",
+      block_public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
+      sender_public: this.#key_pair.getPublic().encode("hex"),
       tags,
     });
 

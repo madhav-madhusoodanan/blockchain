@@ -14,9 +14,9 @@ describe("cryptoHash()", () => {
   });
 
   it("produces a unique hash when the properties have changed on an input", () => {
-    const foo = {};
+    var foo = { a: "b" };
     const originalHash = cryptoHash(foo);
-    foo["a"] = "a";
+    foo.a = "a";
 
     expect(cryptoHash(foo)).not.toEqual(originalHash);
   });

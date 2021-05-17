@@ -9,37 +9,34 @@
  * Cannots:
  * 1. Only the blockchain owner (user) has the power to write their own blockchain
  */
-const Block = require("./block");
+// const Block = require("./block");
 class Blockchain {
+  #balance;
   constructor() {
-    this.balance = 0;
     this.chain = [];
   }
-  set chain(chain) {
-    this.chain = chain;
-    this.balance(0);
-  }
+  // set chain(chain) {
+  //   this.chain = chain;
+  //   this.balance(0);
+  // }
   add_block(block) {
     // "M" for money
     // other letters for different types
-    if (Block.is_valid(block)) {
+    if (block && block.is_valid) {
       this.chain = [block, ...this.chain];
       // adds blocks to the start
       return true;
-    }
-    else return false
+    } else return false;
   }
   first() {
     return this.chain[0];
   }
   remove_block() {}
-  static is_valid() {}
   balance(initial_balance) {
-    this.balance = this.chain.reduce(
+    return this.chain.reduce(
       (prev_total, curr) => prev_total + curr.money,
       initial_balance || 0
     );
-    return this.balance;
   }
 }
 module.exports = Blockchain;

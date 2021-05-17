@@ -1,8 +1,15 @@
-var EC = require("elliptic").ec;
-var curve = new EC("ed25519");
-const { SHA256 } = require("../util");
-
-var key_1 = curve.genKeyPair();
-
-console.log(key_1.getPrivate('hex'));
-console.log(SHA256('abc'));
+class Object_1 {
+  #data_1;
+  #data_2;
+  constructor() {
+    this.#data_1 = "foo";
+    this.#data_2 = "bar";
+  }
+  get data_1() {
+    return this.#data_1;
+  }
+  get data_2() {
+    return this.#data_2;
+  }
+}
+console.log(new Object_1());

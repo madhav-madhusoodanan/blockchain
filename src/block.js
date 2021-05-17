@@ -10,9 +10,8 @@
  * 3. private data members ensures data security
  * 4. receiver_key is of type bignum
  */
-import { cryptoHash, verifySignature } from "./util";
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "../config";
-import hexToBinary from "hex-to-binary";
+const { SHA256, verifySignature } = require("../util");
+const { DIFFICULTY, BET_KEEPING_KEY, TYPE } = require("./config");
 
 class Block {
   #initial_balance;
@@ -87,37 +86,37 @@ class Block {
     return this.#hash;
   }
   get sender_public() {
-    return this.sender_public;
+    return this.#sender_public;
   }
   get type() {
     // one-time type casting
     return this.#type;
   }
   set add_verifications(verification) {
-    this.#verifications.append(verification);
+    if(verification) this.#verifications.push(verification);
   }
 
-  is_valid() {
+  get is_valid() {
     // data-only blocks return true
+    if (!this.receiver_key) this.receiver_key = BET_KEEPING_KEY;
     if (!this) return false;
-    else if (!this.money) return true;
+    else if (!this.money || this.type.is_genesis) return true;
     // A block is valid if a nonce exists
     // Not valid if money is Infinity
     else if (!this.nonce || this.money === Infinity) return false;
     // hashes exist
-    else if (!this.receiver_key) this.receiver_key = BET_KEEPING_KEY;
     // 2. hash is verified
     else if (!this.hash[0] || !this.hash[1]) return false;
     else if (
       !verifySignature({
-        publicKey: this.sender_public /* type hex string */,
+        public_key: this.sender_public /* type hex string of the account that made it */,
         data: this.hash[0],
         signature: this.verifications[0],
       })
     )
       return false;
     else {
-      const hash = cryptoHash(
+      const hash = SHA256(
         this.timestamp,
         this.hash[1],
         this.data,
@@ -126,35 +125,31 @@ class Block {
         this.nonce,
         this.initial_balance
       );
-      return (
-        hexToBinary(hash).substring(0, DIFFICULTY) === "0".repeat(DIFFICULTY)
-      );
+      return hash.substring(0, DIFFICULTY) === "0".repeat(DIFFICULTY);
     }
     // the block-pool will verify state changes...dont worry
   }
 
   mine() {
-    if (this.#money) {
-      do {
-        ++this.#nonce;
-        this.#hash[0] = cryptoHash(
-          this.#timestamp,
-          this.#hash[1],
-          this.#data,
-          this.#money,
-          this.#receiver_key,
-          this.#nonce,
-          this.#initial_balance
-        );
-      } while (
-        hexToBinary(this.#hash[0]).substring(0, DIFFICULTY) !==
-        "0".repeat(DIFFICULTY)
+    do {
+      ++this.#nonce;
+      this.#hash[0] = SHA256(
+        this.#timestamp,
+        this.#hash[1],
+        this.#data,
+        this.#money,
+        this.#receiver_key,
+        this.#nonce,
+        this.#initial_balance
       );
-    }
+    } while (
+      this.#hash[0].substring(0, DIFFICULTY) !== "0".repeat(DIFFICULTY) &&
+      this.#money
+    );
   }
   create_input() {}
   create_output_map() {}
   update() {}
 }
 
-export default Block;
+module.exports = Block;

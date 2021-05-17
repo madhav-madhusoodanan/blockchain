@@ -34,7 +34,7 @@ import Account from "./account";
 import Block from "./block";
 import Comm from "./comm";
 import Block_pool from "./block_pool";
-import { SHA256, genKeyPair, genPublic } from "./util";
+import { SHA256, genKeyPair, genPublic } from "../util";
 class User {
   // declaration of private fields
   #key_pair;
@@ -49,8 +49,8 @@ class User {
       comm ||
       new Comm(
         `${SHA256(
-          this.#key_pair[0].getPublic("hex"),
-          this.#key_pair[1].getPublic("hex")
+          this.#key_pair[0].getPublic().encode("hex"),
+          this.#key_pair[1].getPublic().encode("hex")
         )}`
       );
     this.comm.comm.on("data", (data) => {
@@ -80,8 +80,8 @@ class User {
 
   get public_user_key() {
     return [
-      this.#key_pair[0].getPublic("hex"),
-      this.#key_pair[1].getPublic("hex"),
+      this.#key_pair[0].getPublic().encode("hex"),
+      this.#key_pair[1].getPublic().encode("hex"),
     ];
   }
   send({
@@ -101,7 +101,7 @@ class User {
           tags,
         });
 
-        if (Block.is_valid(block)) this.comm.send(block);
+        if (block.is_valid) this.comm.send(block);
       } else {
         // no problem if money is negative or Infinity then (above)
         // what if money is null?
@@ -117,7 +117,7 @@ class User {
             tags,
           });
 
-          if (block.is_valid()) {
+          if (block.is_valid) {
             money += block.money;
             ++i;
             data = null;
@@ -224,7 +224,7 @@ class User {
     var a = this.#key_pair[0].getPrivate(); // a is 1st private key
     // making key-pair whose private key is SHA256 hash of (a*R)
     var temp_key = genKeyPair(
-      SHA256(block.block_public_key.mul(a)) // block.block_public_key is of type Point
+      SHA256(genPublic(block.block_public_key).mul(a)) // block.block_public_key is of type Point
     );
     var B = this.#key_pair[1].getPublic(); // 2nd public key
     var temp = temp_key.getPublic();
