@@ -21,7 +21,7 @@ describe("User", () => {
       money: -10,
       data: "1st transaction",
       reference_hash: null,
-      receiver_address: user_1.public_user_key,
+      receiver_address: user_1.public_key,
       tags: [],
     });
 
@@ -31,7 +31,13 @@ describe("User", () => {
     user_1.scan();
     expect(block.is_valid).toEqual(true);
     expect(account.balance).toEqual(20);
+    expect(account.verify).toEqual(true);
     expect(user_1.accounts.length).toEqual(1);
+    expect(user_1.accounts[0].public_key).toEqual(block.receiver_key);
+    expect(user_1.accounts[0].verify).toEqual(true);
     expect(user_1.balance).toEqual(10);
   });
 });
+
+
+

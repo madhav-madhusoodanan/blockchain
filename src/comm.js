@@ -10,10 +10,10 @@
  */
 const io = require("socket.io-client");
 class Comm {
-  constructor(public_user_key) {
+  constructor(id) {
     this.comm = io();
     // job of the server to handle the rooms
-    this.comm.emit("join", { public_user_key }, (error) => {
+    this.comm.emit("join", { id }, (error) => {
       if (error) alert(error);
     });
   }

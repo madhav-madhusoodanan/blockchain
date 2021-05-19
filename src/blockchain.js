@@ -23,7 +23,7 @@ class Blockchain {
     // "M" for money
     // other letters for different types
     if (block && block.is_valid) {
-      this.chain = [block, ...this.chain];
+      this.chain = [block].concat(this.chain);
       // adds blocks to the start
       return true;
     } else return false;
@@ -33,9 +33,15 @@ class Blockchain {
   }
   remove_block() {}
   balance(initial_balance) {
+    if (!(this.chain instanceof Array)) return initial_balance || 0;
     return this.chain.reduce(
       (prev_total, curr) => prev_total + curr.money,
       initial_balance || 0
+    );
+  }
+  is_valid() {
+    return (
+      this.balance(0) === this.first().initial_balance + this.first().money
     );
   }
 }

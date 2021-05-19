@@ -86,8 +86,6 @@ class Block_pool {
         return;
       } else return send;
     });
-    if (new_receive.length)
-      console.log(new_receive[0].money + " hahaha finally a receive");
     this.recycle_bin = [];
     // remove both if both match, send the receive
     // remove just the receive if they dont match
@@ -100,7 +98,7 @@ class Block_pool {
     // // // 1. if that block's meant for you, take it in XD
     // // 2. sign on it
     // // 3. send it to others
-    let new_set = [].concat(this.new_receive, this.new_send);
+    let new_set = this.new_receive.concat(this.new_send);
     if (addresses instanceof Array)
       this.addresses = this.addresses.concat(addresses);
     this.addresses = this.addresses.map((data) => {
@@ -115,8 +113,7 @@ class Block_pool {
         data.timestamp = block.timestamp;
       }
     });
-    new_set = null;
-    console.log(this.new_send);
+    new_set = [];
     // if an address has new timestamp
   }
   remove() {} // accepts an array of block hashes to remove

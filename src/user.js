@@ -78,7 +78,7 @@ class User {
   //   ];
   // }
 
-  get public_user_key() {
+  get public_key() {
     return [
       this.#key_pair[0].getPublic().encode("hex"),
       this.#key_pair[1].getPublic().encode("hex"),
@@ -88,6 +88,7 @@ class User {
     return this.#accounts;
   }
   get balance() {
+    if (!(this.#accounts instanceof Array)) return 0;
     return this.#accounts.reduce(
       (prev_total, account) => prev_total + account.balance,
       0
@@ -179,6 +180,7 @@ class User {
           money: -1 * block.money, // transform the block money to +ve number
           reference_hash: block.hash[0],
           receiver_address: [block.sender_public],
+          tags: [],
         });
         if (new_block) {
           this.#accounts.push(account);
@@ -190,6 +192,7 @@ class User {
           money: -1 * block.money, // transform the block money
           reference_hash: block.hash[0],
           receiver_address: [block.sender_public],
+          tags: [],
         });
         if (new_block) return new_block;
         else return;

@@ -11,7 +11,7 @@
  * 4. receiver_key is of type bignum
  */
 const { SHA256, verifySignature } = require("../util");
-const { DIFFICULTY, BET_KEEPING_KEY, TYPE } = require("./config");
+const { DIFFICULTY, BET_KEEPING_KEY, TYPE, PHILANTHROPIST } = require("./config");
 
 class Block {
   #initial_balance;
@@ -39,7 +39,7 @@ class Block {
     tags,
   }) {
     this.#hash = [null, null, null];
-    this.#initial_balance = initial_balance || null;
+    this.#initial_balance = initial_balance || 0;
     this.#money = money || null;
     this.#data = data || null;
     this.#sender_public = sender_public;
@@ -100,7 +100,7 @@ class Block {
     // data-only blocks return true
     if (!this.receiver_key) this.receiver_key = BET_KEEPING_KEY;
     if (!this) return false;
-    else if (!this.money || this.type.is_genesis) return true;
+    else if (!this.money || (this.type.is_genesis && this.sender_public === PHILANTHROPIST)) return true;
     // A block is valid if a nonce exists
     // Not valid if money is Infinity
     else if (!this.nonce || this.money === Infinity) return false;

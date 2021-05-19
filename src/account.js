@@ -24,17 +24,19 @@ class Account {
 
     this.base_balance = 0; // will come in necessary when clearing blockchains
   }
-
-  get lock() {
+  get public_key() {
     return this.#key_pair.getPublic().encode("hex");
   }
 
   // key is present only for debugging
-  get key() {
+  get private_key() {
     return this.#key_pair.getPrivate("hex");
   }
   get balance() {
     return this.blockchain.balance(this.base_balance);
+  }
+  get verify() {
+    return this.blockchain.is_valid();
   }
 
   create_block({ money, data, reference_hash, receiver_address, tags }) {
@@ -45,7 +47,7 @@ class Account {
     var block;
     tags = tags || [];
     if (!(receiver_address instanceof Array)) return null;
-    const initial_balance = this.balance;
+    let initial_balance = this.balance || 0;
     if (receiver_address.length === 2) {
       // send block
       // create a receiver_key and block_public_key from receiver_address
@@ -55,7 +57,6 @@ class Account {
       // make the below more efficient)
       var A = genPublic(receiver_address[0]);
       var B = genPublic(receiver_address[1]);
-
       var random_key_2 = genKeyPair(SHA256(A.mul(r).encode("hex")));
       A = r = null;
       var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type point
@@ -72,10 +73,10 @@ class Account {
         tags,
       });
     } else if (receiver_address.length === 1) {
+      // receive block
       block = new Block({
         initial_balance,
         money,
-        data,
         receiver_key: receiver_address,
         reference_hash,
         last_hash: /* this.blockchain.first().hash[0] || */ "dead",
@@ -95,6 +96,7 @@ class Account {
     // else make just a normal signature
     return this.#key_pair.sign(data_chunk);
   }
+
   clean() {}
 }
 module.exports = Account;
