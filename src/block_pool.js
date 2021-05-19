@@ -31,8 +31,9 @@ class Block_pool {
   clear() {
     this.old_send = this.old_send.concat(this.new_send);
     var new_send = this.new_send;
-    this.new_send = [];
-    return new_send;
+    var new_receive = this.new_receive;
+    this.new_send = this.new_receive = [];
+    return { new_send, new_receive };
   }
   add({
     new_receive,
@@ -60,7 +61,7 @@ class Block_pool {
     new_send.forEach((send) => {
       // send was till here
       // switching on just the new send blocks will cover the old send blocks too
-      if(!send) return;
+      if (!send) return;
       if (!this.event.listenerCount(send.hash[0])) {
         this.event.on(send.hash[0], (receive) => {
           if (!(receive.money + send.money)) {
@@ -85,7 +86,7 @@ class Block_pool {
     new_receive.forEach((receive) => {
       // status describes if receive block matched the money or not
       // on so that atleast one 'true' response will validate it
-      if(!receive) return;
+      if (!receive) return;
       this.event.on(receive.hash[0], (status) => {
         if (status) {
           this.new_receive.push(receive);

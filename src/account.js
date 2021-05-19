@@ -14,13 +14,16 @@
 const Block = require("./block");
 const Blockchain = require("./blockchain");
 const { genKeyPair, SHA256, genPublic, random } = require("../util");
+const Block_pool = require("./block_pool");
 
 class Account {
   // declaration of private fields
   #key_pair;
 
-  constructor({ blockchain, key_pair, private_key }) {
+  constructor({ blockchain, key_pair, private_key, standalone }) {
     this.blockchain = blockchain || new Blockchain();
+    if (standalone) this.block_pool = new Block_pool();
+    else this.block_pool = null;
 
     if (key_pair) this.#key_pair = key_pair;
     else this.#key_pair = genKeyPair(private_key);
@@ -53,8 +56,10 @@ class Account {
     // create a one-time receiver_address and signatures too
     // money is already negative if it is a send block
     var block;
-    var last_hash = this.blockchain.first() ? this.blockchain.first().hash[0] : null,
-    tags = tags || [];
+    var last_hash = this.blockchain.first()
+        ? this.blockchain.first().hash[0]
+        : null,
+      tags = tags || [];
     if (!(receiver_address instanceof Array)) return null;
     let initial_balance = this.balance || 0;
     if (receiver_address.length === 2) {
@@ -106,7 +111,100 @@ class Account {
     // else make just a normal signature
     return this.#key_pair.sign(data_chunk);
   }
+  send({
+    money,
+    data,
+    receiver_address,
+    tags /* only for independent types */,
+  }) {
+    if (
+      !standalone &&
+      receiver_address instanceof Array &&
+      receiver_address.length !== 1
+    )
+      return null;
+    try {
+      if (money < 0 || money === Infinity) money = 0;
+      else if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
+        const block = this.create_block({
+          money: 0,
+          data,
+          receiver_address,
+          tags,
+        });
 
+        if (Block.is_valid(block) && verify_block(block)) return block;
+      } else {
+        // no problem if money is negative or Infinity then (above)
+        // what if money is null?
+        // then the 1st part of "while" condition is false (below)
+        const balance = this.balance;
+        if (balance === Infinity) return null;
+
+        const block = this.create_block({
+          money: money > balance ? -1 * balance : -1 * money,
+          data,
+          receiver_address,
+          tags,
+        });
+
+        if (Block.is_valid(block) && verify_block(block)) {
+          money += block.money;
+          data = null;
+          return block;
+        }
+
+        // if the block was a spam block, dont transact and continue
+        // can happen if the first few blocks have zero balance
+        // zero balance may appear due to empty accounts
+        // usually only archived accounts have Infinity balance
+      }
+      if (money) throw new Error("insufficient Balance. Emptied it");
+      // if account is empty, archive it
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+  receive(receives) {
+    if (!this.standalone) return null;
+    receives = receives.map((block) => {
+      const new_block = this.create_block({
+        money: -1 * block.money, // transform the block money to +ve number
+        reference_hash: block.hash[0],
+        receiver_address: [block.sender_public],
+        tags: [],
+      });
+      if (new_block) {
+        return new_block;
+      } else return;
+    });
+    return receives;
+  }
+  update_pool(data) {
+    if (!this.standalone) return false;
+    try {
+      // transit data type: { new_receive, new_send, addresses, network }
+      this.block_pool.add(data); // the pool makes sure only legit blocks are passed
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  scan() {
+    var receives = this.block_pool.new_send.map((block) => {
+      // find a way to store the private key within the block
+      if (this.is_for_me(block) && block.money < 0) return block;
+    });
+    this.block_pool.add({ new_receive: this.receive(receives) });
+    return this.block_pool.clear();
+  }
+  is_for_me(block) {
+    if (this.#key_pair.getPublic().eq(genPublic(block.receiver_key))) {
+      return true;
+    } else return false;
+  }
   clean() {}
 }
 module.exports = Account;

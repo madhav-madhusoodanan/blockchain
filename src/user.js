@@ -221,10 +221,7 @@ class User {
     });
     this.receive(); // creates receive blocks for all of em
     this.block_pool.add({ new_receive: this.received });
-    this.comm.send({
-      new_receive: this.block_pool.new_receive,
-      new_send: this.block_pool.new_send,
-    });
+    this.comm.send(this.block_pool.clear());
   }
   is_for_me(block) {
     // memory refresher: if private key is a, then public key is A = aG
