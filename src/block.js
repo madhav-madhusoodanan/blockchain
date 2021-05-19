@@ -52,7 +52,7 @@ class Block {
     this.#hash[0] = null; // hash representation of block
     this.#hash[1] = last_hash || null; // hash of last block in blockchain
     this.#hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
-    this.#type = new TYPE(tags);
+    this.#type = new TYPE(tags, money, data);
     this.mine();
   }
   get initial_balance() {
@@ -93,7 +93,7 @@ class Block {
     return this.#type;
   }
   set add_verifications(verification) {
-    if(verification) this.#verifications.push(verification);
+    if (verification) this.#verifications.push(verification);
   }
 
   get is_valid() {
@@ -107,9 +107,11 @@ class Block {
     // hashes exist
     // 2. hash is verified
     else if (!this.hash[0] || !this.hash[1]) return false;
+    // else if (!(this.money > 0) || !this.hash[2]) return false;
     else if (
       !verifySignature({
-        public_key: this.sender_public /* type hex string of the account that made it */,
+        public_key:
+          this.sender_public /* type hex string of the account that made it */,
         data: this.hash[0],
         signature: this.verifications[0],
       })

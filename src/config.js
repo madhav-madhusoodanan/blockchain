@@ -21,79 +21,57 @@ const GENESIS_DATA = {
 
 class TYPE {
   #type;
-  constructor() {
-    this.#type = 0;
-  }
-  set type(tags) {
-    /* process all the tags 
-       everything is bit-encoded for efficiency*/
-    this.#type = 0;
-    if (!(tag instanceof Array)) return false;
+  constructor(tags, money, data) {
+    /* process all the tags */
+    if (!(tags instanceof Array)) return false;
     else {
-      tags.forEach((tag) => {
+      tags = tags.map((tag) => {
         // check if we can reduce the size
-
-        // a |= 1 is the exact same as a = a | 1, (bitwise OR operation)
-        // if regex search is successful, the index number is returned or else -1 is
-        if (tag.search(/genesis/)) this.#type = Infinity;
-        else if (tag.search(/data/) + 1) this.#type |= 1;
-        else if (tag.search(/speed/) + 1) this.#type |= 32;
-        // kept it here for efficiency
-        else if (tag.search(/nft/) + 1) this.#type |= 2;
-        else if (tag.search(/money/) + 1) this.#type |= 4;
-        else if (tag.search(/db/) + 1) this.#type |= 8;
-        else if (tag.search(/contract/) + 1) this.#type |= 16;
-        else if (tag.search(/noreply/) + 1) this.#type |= 64;
-        else if (tag.search(/loan/) + 1) this.#type |= 128;
+        if (tag.search(/genesis/) + 1) return "genesis";
+        else if (tag.search(/nft/) + 1 || (data && money)) return "nft";
+        else if (tag.search(/data/) + 1 || data) return "data";
+        else if (tag.search(/speed/) + 1) return "speed";
+        else if (tag.search(/money/) + 1 || money) return "money";
+        else if (tag.search(/db/) + 1) return "db";
+        else if (tag.search(/contract/) + 1) return "contract";
+        else if (tag.search(/noreply/) + 1) return "noreply";
+        else if (tag.search(/loan/) + 1) return "loan";
+        else return;
       });
+      this.#type = tags;
       // add additional checks
       return true;
     }
   }
   // return true if yes, false if no
   get is_genesis() {
-    return this.#type === Infinity;
+    return "genesis" in this.#type;
   }
   get is_spam() {
-    return !(this.#type | 0);
+    return !this.#type.length;
   }
   get is_data() {
-    return this.#type & 1;
+    return "data" in this.#type;
   }
   get is_nft() {
-    return this.#type & 2;
+    return "nft" in this.#type;
   }
   get is_money() {
-    return this.#type & 4;
+    return "money" in this.#type;
   }
   get is_database() {
-    return this.#type & 8;
+    return "db" in this.#type;
   }
   get is_contract() {
-    return this.#type & 16;
+    return "contract" in this.#type;
   }
   get is_speed() {
-    return this.#type & 32;
+    return "speed" in this.#type;
   }
   get is_no_reply() {
-    return this.#type & 64;
+    return "noreply" in this.#type;
   }
 }
-
-// convert to an object where types are bit strings in future (chars for now)
-// const TYPE = {
-//   // fundamental types
-//   DATA: "D",
-//   MONEY: "M",
-//   NFT: "N",
-//   SPAM: "S",
-//   // independent types
-//   DATABASE: "B", // if receiver_key is null but sender_keys are present
-//   CONTRACT: "C",
-//   HIGH_SPEED: "H",
-//   NO_REPLY: "R", // when no_receive block is required and when money is zero
-//   // work not done on it yet
-// };
 
 const STARTING_BALANCE = 1000;
 
@@ -112,5 +90,5 @@ module.exports = {
   DIFFICULTY,
   TYPE,
   BET_KEEPING_KEY,
-  PHILANTHROPIST
+  PHILANTHROPIST,
 };

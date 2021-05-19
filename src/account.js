@@ -54,13 +54,13 @@ class Account {
     var A = genPublic(receiver_address[0]);
     var B = genPublic(receiver_address[1]);
 
-    var random_key_2 = genKeyPair(SHA256(A.mul(r)));
+    var random_key_2 = genKeyPair(SHA256(A.mul(r).encode("hex")));
     A = r = null;
     var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type point
     B = null;
     const block = new Block({
       initial_balance: balance,
-      money, 
+      money,
       data,
       receiver_key: genPublic(receiver_key),
       reference_hash,

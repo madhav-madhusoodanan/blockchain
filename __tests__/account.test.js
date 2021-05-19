@@ -17,12 +17,12 @@ describe("Account ", () => {
     const block = account.create_block({
       money: 30,
       data,
-      reference_hash: null,
+      reference_hash: "dead",
       receiver_address: [
         A.getPublic().encode("hex"),
         B.getPublic().encode("hex"),
       ],
-      tags: ["genesis", "data", "money"],
+      tags: ["genesis"],
     });
     // console.log(block.hash[0]); //0008451beb1a6f2e3952152c64fe0a50e1ee098160d4674317a3649294857d55
     expect(block.is_valid).toEqual(true);

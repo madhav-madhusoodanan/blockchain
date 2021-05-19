@@ -17,7 +17,7 @@ const verifySignature = ({
 const genKeyPair = (private_key) => {
   let key_pair;
   /* how to add buffer? */
-  if (typeof private_key === Object)
+  if (private_key instanceof Object)
     key_pair = curve.keyFromPrivate(private_key);
   else if (typeof private_key === typeof "")
     key_pair = curve.keyFromPrivate(private_key, "hex");

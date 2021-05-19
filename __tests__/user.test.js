@@ -12,7 +12,7 @@ describe("User", () => {
     account.create_block({
       money: 30,
       data: "genesis",
-      reference_hash: null,
+      reference_hash: "dead",
       receiver_address: PHILANTHROPIST, // i badly need money to test this...
       tags: ["genesis"],
     });

@@ -159,7 +159,7 @@ class User {
      * replace each block with a receive block
      */
 
-    this.received.forEach(({ block, private_key }) => {
+    this.received = this.received.map(({ block, private_key }) => {
       const index = this.#accounts.findIndex(
         (account) => account.public_key === block.receiver_key
       );
@@ -168,7 +168,6 @@ class User {
         const account = new Account({ private_key });
         const new_block = account.create_block({
           money: -1 * block.money, // transform the block money to +ve number
-          data: block.data,
           reference_hash: block.hash[0],
         });
         if (new_block) {
@@ -179,13 +178,10 @@ class User {
         // there is an account
         const new_block = this.#accounts[index].create_block({
           money: -1 * block.money, // transform the block money
-          data: block.data,
           reference_hash: block.hash[0],
         });
-        if (new_block) {
-          this.#accounts.push(account);
-          return new_block;
-        } else return;
+        if (new_block) return new_block;
+        else return;
       }
     });
   }
@@ -224,7 +220,7 @@ class User {
     var a = this.#key_pair[0].getPrivate(); // a is 1st private key
     // making key-pair whose private key is SHA256 hash of (a*R)
     var temp_key = genKeyPair(
-      SHA256(genPublic(block.block_public_key).mul(a)) // block.block_public_key is of type Point
+      SHA256(genPublic(block.block_public_key).mul(a).encode("hex")) // block.block_public_key is of type Point
     );
     var B = this.#key_pair[1].getPublic(); // 2nd public key
     var temp = temp_key.getPublic();

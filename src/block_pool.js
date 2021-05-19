@@ -19,7 +19,7 @@ class Block_pool {
   get pool() {
     return this.pool;
   }
-  // addresses = [{public, money, timestamp}, {}] type
+  // addresses = [{public, money, timestamp, last_block}, {}] type
   // set addresses(addresses) {
   //   // addresses are not supposed to be erased
   //   // find a way to update addresses or add new ones
@@ -36,9 +36,10 @@ class Block_pool {
     // first, preliminary checking
     // should we return true, or the block itself (in array.map function?)
 
-    if (new_send) {
+    if (new_send instanceof Array) {
       new_send = new_send.map((block) => {
-        if (block.is_valid && block.money <= 0) return block;
+        if (block instanceof Block && block.is_valid && block.money <= 0)
+          return block;
         else;
       });
       new_send.forEach((send) => {
@@ -53,11 +54,12 @@ class Block_pool {
           });
         }
       });
-    }
+    } else new_send = [];
 
-    if (new_receive) {
+    if (new_receive instanceof Array) {
       new_receive = new_receive.map((block) => {
-        if (block.is_valid && block.money >= 0) return block;
+        if (block instanceof Block && block.is_valid && block.money >= 0)
+          return block;
         else;
       });
       new_receive.forEach((receive) => {
@@ -71,7 +73,7 @@ class Block_pool {
         });
         this.event.emit(receive.hash[2], receive);
       });
-    }
+    } else new_receive = [];
 
     new_send = new_send.map((send) => !(send.hash[0] in this.recycle_bin));
     this.recycle_bin = [];
@@ -86,8 +88,8 @@ class Block_pool {
     // // // 1. if that block's meant for you, take it in XD
     // // 2. sign on it
     // // 3. send it to others
-    let new_set = [].append(this.new_receive, this.new_send);
-    if (addresses) this.addresses.append(addresses);
+    let new_set = [].concat(this.new_receive, this.new_send);
+    if (addresses instanceof Array) this.addresses = this.addresses.concat(addresses);
     this.addresses = this.addresses.map((data) => {
       new_set.sort((a, b) => a.timestamp - b.timestamp);
       let block = new_set.find(
