@@ -42,33 +42,50 @@ class Account {
     // keep tight block validity checking here
     // create a one-time receiver_address and signatures too
     // money is already negative if it is a send block
-    const balance = this.balance;
+    var block;
+    if (!(receiver_address instanceof Array)) return null;
+    if (receiver_address.length === 2) { // send block
+      const balance = this.balance;
 
-    // create a receiver_key and block_public_key from receiver_address
-    // if its a receive block then it is null
+      // create a receiver_key and block_public_key from receiver_address
 
-    var random_key = genKeyPair(); // R = rG
-    // verify and optimize the steps below
-    var r = random_key.getPrivate();
-    // make the below more efficient)
-    var A = genPublic(receiver_address[0]);
-    var B = genPublic(receiver_address[1]);
+      var random_key = genKeyPair(); // R = rG
+      // verify and optimize the steps below
+      var r = random_key.getPrivate();
+      // make the below more efficient)
+      var A = genPublic(receiver_address[0]);
+      var B = genPublic(receiver_address[1]);
 
-    var random_key_2 = genKeyPair(SHA256(A.mul(r).encode("hex")));
-    A = r = null;
-    var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type point
-    B = null;
-    const block = new Block({
-      initial_balance: balance,
-      money,
-      data,
-      receiver_key: genPublic(receiver_key),
-      reference_hash,
-      last_hash: /* this.blockchain.first().hash[0] || */ "dead",
-      block_public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
-      sender_public: this.#key_pair.getPublic().encode("hex"),
-      tags,
-    });
+      var random_key_2 = genKeyPair(SHA256(A.mul(r).encode("hex")));
+      A = r = null;
+      var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type point
+      B = null;
+      block = new Block({
+        initial_balance: balance,
+        money,
+        data,
+        receiver_key: genPublic(receiver_key),
+        reference_hash,
+        last_hash: /* this.blockchain.first().hash[0] || */ "dead",
+        block_public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
+        sender_public: this.#key_pair.getPublic().encode("hex"),
+        tags,
+      });
+    }
+    else if(receiver_address.length === 1) {
+      block = new Block({
+        initial_balance: balance,
+        money,
+        data,
+        receiver_key: receiver_address,
+        reference_hash,
+        last_hash: /* this.blockchain.first().hash[0] || */ "dead",
+        block_public_key: null, // let this specifically be of type point
+        sender_public: this.#key_pair.getPublic().encode("hex"),
+        tags,
+      });
+    }
+    else return null;
 
     block.add_verifications = this.sign(block.hash[0]);
     this.blockchain.add_block(block);

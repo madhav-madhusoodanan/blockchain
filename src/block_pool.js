@@ -38,7 +38,12 @@ class Block_pool {
 
     if (new_send instanceof Array) {
       new_send = new_send.map((block) => {
-        if (block instanceof Block && block.is_valid && block.money <= 0)
+        if (
+          block instanceof Block &&
+          block.block_public_key &&
+          block.is_valid &&
+          block.money <= 0
+        )
           return block;
         else;
       });
@@ -58,7 +63,11 @@ class Block_pool {
 
     if (new_receive instanceof Array) {
       new_receive = new_receive.map((block) => {
-        if (block instanceof Block && block.is_valid && block.money >= 0)
+        if (
+          block instanceof Block &&
+          block.is_valid &&
+          block.money >= 0
+        )
           return block;
         else;
       });
@@ -89,7 +98,8 @@ class Block_pool {
     // // 2. sign on it
     // // 3. send it to others
     let new_set = [].concat(this.new_receive, this.new_send);
-    if (addresses instanceof Array) this.addresses = this.addresses.concat(addresses);
+    if (addresses instanceof Array)
+      this.addresses = this.addresses.concat(addresses);
     this.addresses = this.addresses.map((data) => {
       new_set.sort((a, b) => a.timestamp - b.timestamp);
       let block = new_set.find(

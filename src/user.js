@@ -169,6 +169,7 @@ class User {
         const new_block = account.create_block({
           money: -1 * block.money, // transform the block money to +ve number
           reference_hash: block.hash[0],
+          receiver_address: [block.sender_public],
         });
         if (new_block) {
           this.#accounts.push(account);
@@ -179,6 +180,7 @@ class User {
         const new_block = this.#accounts[index].create_block({
           money: -1 * block.money, // transform the block money
           reference_hash: block.hash[0],
+          receiver_address: [block.sender_public],
         });
         if (new_block) return new_block;
         else return;
