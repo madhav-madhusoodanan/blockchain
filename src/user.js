@@ -84,6 +84,15 @@ class User {
       this.#key_pair[1].getPublic().encode("hex"),
     ];
   }
+  get accounts() {
+    return this.#accounts;
+  }
+  get balance() {
+    return this.#accounts.reduce(
+      (prev_total, account) => prev_total + account.balance,
+      0
+    );
+  }
   send({
     money,
     data,

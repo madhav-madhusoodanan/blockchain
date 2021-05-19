@@ -47,6 +47,7 @@ class Block_pool {
           return block;
         else;
       });
+
       new_send.forEach((send) => {
         // switching on just the new send blocks will cover the old send blocks too
         if (!this.event.listenerCount(send.hash[0])) {
@@ -63,11 +64,7 @@ class Block_pool {
 
     if (new_receive instanceof Array) {
       new_receive = new_receive.map((block) => {
-        if (
-          block instanceof Block &&
-          block.is_valid &&
-          block.money >= 0
-        )
+        if (block instanceof Block && block.is_valid && block.money >= 0)
           return block;
         else;
       });
@@ -84,13 +81,19 @@ class Block_pool {
       });
     } else new_receive = [];
 
-    new_send = new_send.map((send) => !(send.hash[0] in this.recycle_bin));
+    new_send = new_send.map((send) => {
+      if (send.hash[0] in this.recycle_bin) {
+        return;
+      } else return send;
+    });
+    if (new_receive.length)
+      console.log(new_receive[0].money + " hahaha finally a receive");
     this.recycle_bin = [];
     // remove both if both match, send the receive
     // remove just the receive if they dont match
     // add the pool to this.pool
-    this.new_send.concat(new_send);
-    this.new_receive.concat(new_receive);
+    this.new_send = this.new_send.concat(new_send);
+    this.new_receive = this.new_receive.concat(new_receive);
     // look at each block and search for the corresponding sender address
     // if it exists
     // // 1. update the corresponding address state if timestamp is newer
@@ -113,6 +116,7 @@ class Block_pool {
       }
     });
     new_set = null;
+    console.log(this.new_send);
     // if an address has new timestamp
   }
   remove() {} // accepts an array of block hashes to remove

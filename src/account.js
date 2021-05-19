@@ -43,12 +43,12 @@ class Account {
     // create a one-time receiver_address and signatures too
     // money is already negative if it is a send block
     var block;
+    tags = tags || [];
     if (!(receiver_address instanceof Array)) return null;
-    if (receiver_address.length === 2) { // send block
-      const balance = this.balance;
-
+    const initial_balance = this.balance;
+    if (receiver_address.length === 2) {
+      // send block
       // create a receiver_key and block_public_key from receiver_address
-
       var random_key = genKeyPair(); // R = rG
       // verify and optimize the steps below
       var r = random_key.getPrivate();
@@ -61,7 +61,7 @@ class Account {
       var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type point
       B = null;
       block = new Block({
-        initial_balance: balance,
+        initial_balance,
         money,
         data,
         receiver_key: genPublic(receiver_key),
@@ -71,10 +71,9 @@ class Account {
         sender_public: this.#key_pair.getPublic().encode("hex"),
         tags,
       });
-    }
-    else if(receiver_address.length === 1) {
+    } else if (receiver_address.length === 1) {
       block = new Block({
-        initial_balance: balance,
+        initial_balance,
         money,
         data,
         receiver_key: receiver_address,
@@ -84,8 +83,7 @@ class Account {
         sender_public: this.#key_pair.getPublic().encode("hex"),
         tags,
       });
-    }
-    else return null;
+    } else return null;
 
     block.add_verifications = this.sign(block.hash[0]);
     this.blockchain.add_block(block);

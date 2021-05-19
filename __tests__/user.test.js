@@ -29,7 +29,6 @@ describe("User", () => {
       new_send: [block],
     });
     user_1.scan();
-
     expect(block.is_valid).toEqual(true);
     expect(account.balance).toEqual(20);
     expect(user_1.accounts.length).toEqual(1);
