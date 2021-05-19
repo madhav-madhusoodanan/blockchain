@@ -118,7 +118,7 @@ class User {
         // then the 1st part of "while" condition is false (below)
         while (money > 0 || data) {
           const balance = this.#accounts[i].balance;
-          if (block.type.is_spam || balance === Infinity) continue;
+          if (balance === Infinity) continue;
 
           const block = this.#accounts[i].create_block({
             money: money > balance ? -1 * balance : -1 * money,
@@ -214,7 +214,6 @@ class User {
   }
   scan() {
     this.received = this.block_pool.new_send.map((block) => {
-      
       if (block.money > 0) return;
       const private_key = this.is_for_me(block);
       // find a way to store the private key within the block

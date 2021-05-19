@@ -99,12 +99,11 @@ class Block {
 
   static is_valid(block) {
     // data-only blocks return true
-    if (!block) return false;
+    if (!block && block.type.is_spam) return false;
     if (!block.receiver_key) {
       console.log("no receiver");
       block.receiver_key = BET_KEEPING_KEY;
     } else if (!block.money) {
-      console.log(block.data);
       return true;
     } 
     if (
@@ -115,9 +114,6 @@ class Block {
       block.money + block.initial_balance < 0 &&
       block.sender_public !== SENDER_PUBLIC
     ) {
-      console.log(
-        "oops " + block.data + " " + block.money + " " + block.initial_balance
-      );
       return false;
     }
     // A block is valid if a nonce exists

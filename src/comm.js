@@ -20,8 +20,9 @@ class Comm {
   // data_chunk must always be in object/json format
   // {new_send, new_receive, addresses, network}
   send(data_chunk) {
-    // format the data structure
-    this.comm.emit("data", data_chunk);
+    /* this.comm.emit("data", data_chunk); */
+    console.log("hehe");
+    return data_chunk; // for testing in amount.send
   }
 }
 module.exports = Comm;
