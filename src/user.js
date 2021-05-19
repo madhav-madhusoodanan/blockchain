@@ -34,7 +34,7 @@ const Account = require("./account");
 const Block = require("./block");
 const Comm = require("./comm");
 const Block_pool = require("./block_pool");
-const { SHA256, genKeyPair, genPublic } = require("../util");
+const { SHA256, genKeyPair, genPublic, verify_block } = require("../util");
 class User {
   // declaration of private fields
   #key_pair;
@@ -111,7 +111,7 @@ class User {
           tags,
         });
 
-        if (block.is_valid) this.comm.send(block);
+        if (Block.is_valid(block) && verify_block(block)) this.comm.send(block);
       } else {
         // no problem if money is negative or Infinity then (above)
         // what if money is null?
@@ -127,12 +127,12 @@ class User {
             tags,
           });
 
-          if (block.is_valid) {
+          if (Block.is_valid(block) && verify_block(block)) {
             money += block.money;
-            ++i;
             data = null;
             this.comm.send(block);
-          } else ++i;
+          }
+          ++i;
 
           // if the block was a spam block, dont transact and continue
           // can happen if the first few blocks have zero balance
@@ -157,6 +157,7 @@ class User {
 
       return true;
     } catch (error) {
+      console.error(error);
       return false;
     }
   }
@@ -213,6 +214,7 @@ class User {
   }
   scan() {
     this.received = this.block_pool.new_send.map((block) => {
+      
       if (block.money > 0) return;
       const private_key = this.is_for_me(block);
       // find a way to store the private key within the block

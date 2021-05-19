@@ -10,8 +10,9 @@
  * 1. Only the blockchain owner (user) has the power to write their own blockchain
  */
 // const Block = require("./block");
+const { verify_block } = require("../util");
+const Block = require("./block");
 class Blockchain {
-  #balance;
   constructor() {
     this.chain = [];
   }
@@ -22,9 +23,10 @@ class Blockchain {
   add_block(block) {
     // "M" for money
     // other letters for different types
-    if (block && block.is_valid) {
+    if (block && Block.is_valid(block) && verify_block(block)) {
       this.chain = [block].concat(this.chain);
       // adds blocks to the start
+      this.chain.forEach((block) => console.log(block.data));
       return true;
     } else return false;
   }
@@ -40,9 +42,13 @@ class Blockchain {
     );
   }
   is_valid() {
-    return (
-      this.balance(0) === this.first().initial_balance + this.first().money
-    );
+    try {
+      return (
+        this.balance(0) === this.first().initial_balance + this.first().money
+      );
+    } catch (error) {
+      return false;
+    }
   }
 }
 module.exports = Blockchain;

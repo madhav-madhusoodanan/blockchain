@@ -30,8 +30,22 @@ const genKeyPair = (private_key) => {
 const genPublic = (public_key) => {
   if (typeof public_key === typeof "")
     return curve.keyFromPublic(public_key, "hex").getPublic();
-  if (typeof public_key === typeof curve.g)
-    return public_key.encode("hex");
 };
 
-module.exports = { verifySignature, SHA256, genKeyPair, curve, genPublic };
+const random = () => crypto.randomBytes(32).toString("hex");
+const verify_block = (block) =>
+  verifySignature({
+    public_key:
+      block.sender_public /* type hex string of the account that made it */,
+    data: block.hash[0],
+    signature: block.verifications[0],
+  });
+module.exports = {
+  verifySignature,
+  SHA256,
+  genKeyPair,
+  curve,
+  genPublic,
+  random,
+  verify_block,
+};

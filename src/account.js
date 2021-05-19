@@ -6,10 +6,14 @@
  * 2. Only one key-pair
  * 3. Acts like a normal account as in Nanocurrency
  * 4. Will create the one-time public account
+ *
+ * Only one account can be the Genesis account
+ * it gives the money to the account in the start
+ * can generate money just like that
  */
 const Block = require("./block");
 const Blockchain = require("./blockchain");
-const { genKeyPair, SHA256, genPublic } = require("../util");
+const { genKeyPair, SHA256, genPublic, random } = require("../util");
 
 class Account {
   // declaration of private fields
@@ -38,6 +42,10 @@ class Account {
   get verify() {
     return this.blockchain.is_valid();
   }
+  get account_verify() {
+    var data = random();
+    return [this.public_key, data, this.sign(data)];
+  }
 
   create_block({ money, data, reference_hash, receiver_address, tags }) {
     // receiver_address is an array of public keys
@@ -45,6 +53,7 @@ class Account {
     // create a one-time receiver_address and signatures too
     // money is already negative if it is a send block
     var block;
+    var last_hash = this.blockchain.first() ? this.blockchain.first().hash[0] : null,
     tags = tags || [];
     if (!(receiver_address instanceof Array)) return null;
     let initial_balance = this.balance || 0;
@@ -65,9 +74,9 @@ class Account {
         initial_balance,
         money,
         data,
-        receiver_key: genPublic(receiver_key),
+        receiver_key: receiver_key.encode("hex"),
         reference_hash,
-        last_hash: /* this.blockchain.first().hash[0] || */ "dead",
+        last_hash,
         block_public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
         sender_public: this.#key_pair.getPublic().encode("hex"),
         tags,
@@ -77,9 +86,10 @@ class Account {
       block = new Block({
         initial_balance,
         money,
+        data: "receive",
         receiver_key: receiver_address,
         reference_hash,
-        last_hash: /* this.blockchain.first().hash[0] || */ "dead",
+        last_hash,
         block_public_key: null, // let this specifically be of type point
         sender_public: this.#key_pair.getPublic().encode("hex"),
         tags,
