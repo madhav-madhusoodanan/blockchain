@@ -1,14 +1,21 @@
 const MINE_RATE = 1000;
 const DIFFICULTY = 1;
 const BET_KEEPING_KEY = "hehe-lolol";
+const PHILANTHROPIST = [
+  "042d7ad770372693a8ef5c8c1b6dbb66e9df23357478fbfed419fff3434b5f32083acb7936016ad9079670dc23bb85a2c9dc6af20025b514fdfd94426324ae4ee3",
+  "0420c35897a0a40e25e735eb5c1e51f141072ee158da624614c25724b6bc073b4b7422399e5f5f9f545d3da946db795085c72b442f4235ef5565d48c5885de0874",
+];
 const GENESIS_DATA = {
   money: 30,
   data: "genesis",
-  receiver_key: "0413dd4863ef381742f66331fc94546c73c1e50411bf2788df1a07ce826f7421e405bd375ccc6f5e962dd44322afd4e6495109bced07f1d90c389bd030321c4dde",
+  receiver_key:
+    "0413dd4863ef381742f66331fc94546c73c1e50411bf2788df1a07ce826f7421e405bd375ccc6f5e962dd44322afd4e6495109bced07f1d90c389bd030321c4dde",
   last_hash: "0008451beb1a6f2e3952152c64fe0a50e1ee098160d4674317a3649294857d55",
   reference_hash: null, // for receive blocks to reference send blocks
-  block_public_key: "0471d295e25f2677bdbb135a2fc37bd99b6625f70e0126b23ec0d8c6974fa3d37d5b53730930cf29bc417dc9238c4ddf8a08a585853abc114bef644f307675d484",
-  sender_public: "0412254552711e5bbe936b1b66ff889966ff31d87a9ddd8f6061de7fc68ead1c1a6c25c3b9e56859eb51c1c5deb27cb30212c6db815d10a05b9a4c35bb9704bd6a",
+  block_public_key:
+    "0471d295e25f2677bdbb135a2fc37bd99b6625f70e0126b23ec0d8c6974fa3d37d5b53730930cf29bc417dc9238c4ddf8a08a585853abc114bef644f307675d484",
+  sender_public:
+    "0412254552711e5bbe936b1b66ff889966ff31d87a9ddd8f6061de7fc68ead1c1a6c25c3b9e56859eb51c1c5deb27cb30212c6db815d10a05b9a4c35bb9704bd6a",
   tags: ["genesis"],
 };
 
@@ -28,7 +35,7 @@ class TYPE {
 
         // a |= 1 is the exact same as a = a | 1, (bitwise OR operation)
         // if regex search is successful, the index number is returned or else -1 is
-        if(tag.search(/genesis/)) this.#type = Infinity;
+        if (tag.search(/genesis/)) this.#type = Infinity;
         else if (tag.search(/data/) + 1) this.#type |= 1;
         else if (tag.search(/speed/) + 1) this.#type |= 32;
         // kept it here for efficiency
@@ -88,20 +95,6 @@ class TYPE {
 //   // work not done on it yet
 // };
 
-const ASSIGN_TYPE = (block) => {
-  // fundamental type assigning
-  if (!block.money && block.data) {
-    if (!block.receiver_key && block.sender_signatures) return TYPE.DATABASE;
-    else return TYPE.DATA;
-  } // kept it at first to optimise speed
-  else if (money && data) return TYPE.NFT;
-  else if (money) return TYPE.MONEY;
-  else return TYPE.SPAM;
-
-  // independent type assigning
-};
-const ASSESS_TAGS = (tags) => {};
-
 const STARTING_BALANCE = 1000;
 
 const REWARD_INPUT = {
@@ -119,6 +112,5 @@ module.exports = {
   DIFFICULTY,
   TYPE,
   BET_KEEPING_KEY,
-  ASSIGN_TYPE,
-  ASSESS_TAGS,
+  PHILANTHROPIST
 };

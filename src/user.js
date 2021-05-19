@@ -30,11 +30,11 @@
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-import Account from "./account";
-import Block from "./block";
-import Comm from "./comm";
-import Block_pool from "./block_pool";
-import { SHA256, genKeyPair, genPublic } from "../util";
+const Account = require("./account");
+const Block = require("./block");
+const Comm = require("./comm");
+const Block_pool = require("./block_pool");
+const { SHA256, genKeyPair, genPublic } = require("../util");
 class User {
   // declaration of private fields
   #key_pair;
@@ -43,7 +43,7 @@ class User {
   constructor({ comm, block_pool, key_pair, accounts }) {
     this.block_pool = block_pool || new Block_pool();
     this.#accounts = accounts || [];
-    this.#key_pair = key_pair; // this is an array of 2 key pairs
+    this.#key_pair = key_pair || [genKeyPair(), genKeyPair()]; // this is an array of 2 key pairs
     this.received = [];
     this.comm =
       comm ||

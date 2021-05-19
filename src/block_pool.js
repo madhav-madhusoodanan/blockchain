@@ -5,8 +5,8 @@
  * 4. inform other transaction pools
  * 5. if an address is updated, send the update to others too
  */
-import Block from "./block";
-import EventEmitter from "events";
+const Block = require("./block");
+const EventEmitter = require("events");
 class Block_pool {
   constructor() {
     this.old_send = [];
@@ -109,4 +109,4 @@ class Block_pool {
   set_map() {}
   clear_if_acepted() {}
 }
-export default Block_pool;
+module.exports = Block_pool;
