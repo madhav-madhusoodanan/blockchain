@@ -24,7 +24,6 @@ describe("The Genesis account", () => {
         user_1.update_pool({
             new_send: [g_block],
         });
-        user_1.scan();
         expect(user_1.accounts.length).toEqual(1);
         expect(user_1.accounts[0].public_key).toEqual(g_block.receiver_key);
         expect(user_1.accounts[0].verify).toEqual(true);

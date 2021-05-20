@@ -21,7 +21,6 @@ const { Account } = require("../src");
     account_1.update_pool({
         new_send: [g_block],
     });
-    account_1.scan();
 
     console.timeEnd("the receiver updates his account"); // 38.701ms
     console.time("the account makes a send block to a 3rd account");
@@ -36,5 +35,4 @@ const { Account } = require("../src");
     account_2.update_pool({
         new_send: [block],
     });
-    account_2.scan();
     console.timeEnd("the 3rd account is updated"); // 36.299 ms

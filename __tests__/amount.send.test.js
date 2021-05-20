@@ -22,7 +22,6 @@ describe("The user", () => {
             new_send: [g_block],
         });
 
-        user_1.scan();
 
         user_1.send({
             money: 50,

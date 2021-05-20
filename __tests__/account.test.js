@@ -22,7 +22,6 @@ describe("A normal account", () => {
         user_1.update_pool({
             new_send: [block],
         });
-        user_1.scan();
 
         expect(user_1.accounts.length).toEqual(0);
         expect(user_1.balance).toEqual(0);

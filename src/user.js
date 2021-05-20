@@ -55,7 +55,6 @@ class User {
             );
         this.comm.comm.on("data", (data) => {
             this.update_pool(data);
-            this.scan();
         });
 
         this.#accounts.sort(
@@ -204,7 +203,8 @@ class User {
     update_pool(data) {
         try {
             // transit data type: { new_receive, new_send, addresses, network }
-            this.block_pool.add(data); // the pool makes sure only legit blocks are passed
+            this.block_pool.add(data);
+            this.scan(); // the pool makes sure only legit blocks are passed
             return true;
         } catch (error) {
             return false;

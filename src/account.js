@@ -13,7 +13,13 @@
  */
 const Block = require("./block");
 const Blockchain = require("./blockchain");
-const { genKeyPair, SHA256, genPublic, random, verify_block } = require("../util");
+const {
+    genKeyPair,
+    SHA256,
+    genPublic,
+    random,
+    verify_block,
+} = require("../util");
 const Block_pool = require("./block_pool");
 
 class Account {
@@ -196,6 +202,7 @@ class Account {
         try {
             // transit data type: { new_receive, new_send, addresses, network }
             this.block_pool.add(data); // the pool makes sure only legit blocks are passed
+            this.scan();
             return true;
         } catch (error) {
             return false;

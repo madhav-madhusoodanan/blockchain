@@ -25,7 +25,6 @@ describe("The user", () => {
         account_1.update_pool({
             new_send: [g_block],
         });
-        account_1.scan();
 
         expect(account_1.balance).toEqual(50);
 
@@ -42,7 +41,6 @@ describe("The user", () => {
         account_2.update_pool({
             new_send: [block],
         });
-        account_2.scan();
 
         expect(account_2.balance).toEqual(20);
     });
