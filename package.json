@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "jest"
+    "test": "jest --watchAll"
   },
   "dependencies": {
     "bn.js": "^5.2.0",

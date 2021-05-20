@@ -13,44 +13,45 @@
 const { verify_block } = require("../util");
 const Block = require("./block");
 class Blockchain {
-  constructor() {
-    this.chain = [];
-  }
-  // set chain(chain) {
-  //   this.chain = chain;
-  //   this.balance(0);
-  // }
-  get length() {
-    return this.chain.length;
-  }
-  add_block(block) {
-    // "M" for money
-    // other letters for different types
-    if (block && Block.is_valid(block) && verify_block(block)) {
-      this.chain = [block].concat(this.chain);
-      // adds blocks to the start
-      return true;
-    } else return false;
-  }
-  first() {
-    return this.chain[0];
-  }
-  remove_block() {}
-  balance(initial_balance) {
-    if (!(this.chain instanceof Array)) return initial_balance || 0;
-    return this.chain.reduce(
-      (prev_total, curr) => prev_total + curr.money,
-      initial_balance || 0
-    );
-  }
-  is_valid() {
-    try {
-      return (
-        this.balance(0) === this.first().initial_balance + this.first().money
-      );
-    } catch (error) {
-      return false;
+    constructor() {
+        this.chain = [];
     }
-  }
+    // set chain(chain) {
+    //   this.chain = chain;
+    //   this.balance(0);
+    // }
+    get length() {
+        return this.chain.length;
+    }
+    add_block(block) {
+        // "M" for money
+        // other letters for different types
+        if (block && Block.is_valid(block) && verify_block(block)) {
+            this.chain = [block].concat(this.chain);
+            // adds blocks to the start
+            return true;
+        } else return false;
+    }
+    first() {
+        return this.chain[0];
+    }
+    remove_block() {}
+    balance(initial_balance) {
+        if (!(this.chain instanceof Array)) return initial_balance || 0;
+        return this.chain.reduce(
+            (prev_total, curr) => prev_total + curr.money,
+            initial_balance || 0
+        );
+    }
+    is_valid() {
+        try {
+            return (
+                this.balance(0) ===
+                this.first().initial_balance + this.first().money
+            );
+        } catch (error) {
+            return false;
+        }
+    }
 }
 module.exports = Blockchain;

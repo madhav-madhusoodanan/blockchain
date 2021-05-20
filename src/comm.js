@@ -10,18 +10,18 @@
  */
 const io = require("socket.io-client");
 class Comm {
-  constructor(id) {
-    this.comm = io();
-    // job of the server to handle the rooms
-    this.comm.emit("join", { id }, (error) => {
-      if (error) alert(error);
-    });
-  }
-  // data_chunk must always be in object/json format
-  // {new_send, new_receive, addresses, network}
-  send(data_chunk) {
-    /* this.comm.emit("data", data_chunk); */
-    return data_chunk; // for testing in amount.send
-  }
+    constructor(id) {
+        this.comm = io();
+        // job of the server to handle the rooms
+        this.comm.emit("join", { id }, (error) => {
+            if (error) alert(error);
+        });
+    }
+    // data_chunk must always be in object/json format
+    // {new_send, new_receive, addresses, network}
+    send(data_chunk) {
+        /* this.comm.emit("data", data_chunk); */
+        return data_chunk; // for testing in amount.send
+    }
 }
 module.exports = Comm;
