@@ -21,15 +21,16 @@ class TYPE {
   constructor(tags, money, data) {
     /* process all the tags */
     if (!(tags instanceof Array)) tags = [];
-    tags = tags.map((tag) => {
+    tags.forEach((tag) => {
       // check if we can reduce the size
+      if (money || data) return "useful";
       if (tag.search(/nft/) + 1 || (data && money)) return "nft";
-      else if (tag.search(/speed/) + 1) return "speed";
-      else if (tag.search(/db/) + 1) return "db";
-      else if (tag.search(/contract/) + 1) return "contract";
-      else if (tag.search(/noreply/) + 1) return "noreply";
-      else if (tag.search(/loan/) + 1) return "loan";
-      else return;
+      else if (tag.search(/speed/) + 1 && !money) return "speed";
+      else if (tag.search(/db/) + 1 && !money) return "db";
+      else if (tag.search(/contract/) + 1 && !money) return "contract";
+      else if (tag.search(/noreply/) + 1 && !money) return "noreply";
+      else if (tag.search(/loan/) + 1 && !money) return "loan";
+      else return "spam";
     });
     this.#type = tags || [];
     // add additional checks
@@ -38,7 +39,7 @@ class TYPE {
 
   // return true if yes, false if no
   get is_spam() {
-    return !this.#type.length;
+    return "spam" in this.#type;
   }
   get is_nft() {
     return "nft" in this.#type;

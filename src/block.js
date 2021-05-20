@@ -99,7 +99,7 @@ class Block {
 
   static is_valid(block) {
     // data-only blocks return true
-    if (!block && block.type.is_spam) return false;
+    if (!block || block.type.is_spam) return false;
     if (!block.receiver_key) {
       console.log("no receiver");
       block.receiver_key = BET_KEEPING_KEY;
