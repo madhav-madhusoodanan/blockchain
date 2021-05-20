@@ -12,8 +12,8 @@ describe("The Genesis account", () => {
     });
 
     const g_block = genesis.create_block({
-      money: -50,
-      data: "genesis genius",
+      money: -70,
+      data: "",
       reference_hash: null,
       receiver_address: user_1.public_key, // i badly need money to test this...
       tags: [],
@@ -27,7 +27,7 @@ describe("The Genesis account", () => {
     expect(user_1.accounts.length).toEqual(1);
     expect(user_1.accounts[0].public_key).toEqual(g_block.receiver_key);
     expect(user_1.accounts[0].verify).toEqual(true);
-    expect(user_1.balance).toEqual(50);
+    expect(user_1.balance).toEqual(70);
   });
   it("can send any amount", () => {});
 });

@@ -1,9 +1,9 @@
 const { User, Account, Block } = require("../src");
-
+const { verify_block } = require("../util");
 describe("The user", () => {
   it("can send any amount successfully within his limit", () => {
-    const account_1 = new User({});
-    const account_2 = new User({});
+    const account_1 = new Account({ standalone: true });
+    const account_2 = new Account({ standalone: true });
     const genesis = new Account({
       // the secret key for the genesis account
       private_key:
@@ -12,25 +12,30 @@ describe("The user", () => {
 
     const g_block = genesis.create_block({
       money: -50,
-      data: "genesis genius",
+      data: "no anonymity",
       reference_hash: null,
-      receiver_address: account_1.public_key, // i badly need money to test this...
+      receiver_address: [account_1.public_key], // i badly need money to test this...
       tags: [],
     });
-    
+
+    expect(verify_block(g_block)).toEqual(true);
+    expect(g_block.money <= 0).toEqual(true);
+    expect(g_block instanceof Block).toEqual(true);
+
     account_1.update_pool({
       new_send: [g_block],
     });
     account_1.scan();
+    expect(account_1.balance).toEqual(50);
 
     account_1.send({
       money: 20,
-      data: "yee",
-      receiver_address: account_2.public_key,
+      data: "amount 20 sent",
+      receiver_address: [account_2.public_key],
       tags: [],
     });
 
-    expect(account_1.accounts[0].blockchain.length).toEqual(2);
+    expect(account_1.blockchain.length).toEqual(2);
     expect(account_1.balance).toEqual(30);
   });
 });

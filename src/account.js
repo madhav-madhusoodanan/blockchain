@@ -22,8 +22,13 @@ class Account {
 
   constructor({ blockchain, key_pair, private_key, standalone }) {
     this.blockchain = blockchain || new Blockchain();
-    if (standalone) this.block_pool = new Block_pool();
-    else this.block_pool = null;
+    if (standalone) {
+      this.standalone = true;
+      this.block_pool = new Block_pool();
+    } else {
+      this.standalone = false;
+      this.block_pool = null;
+    }
 
     if (key_pair) this.#key_pair = key_pair;
     else this.#key_pair = genKeyPair(private_key);
@@ -91,7 +96,7 @@ class Account {
       block = new Block({
         initial_balance,
         money,
-        data: "receive",
+        data: data || "receive",
         receiver_key: receiver_address,
         reference_hash,
         last_hash,
@@ -118,9 +123,11 @@ class Account {
     tags /* only for independent types */,
   }) {
     if (
-      !standalone &&
+      // guard clauses
+      !this.standalone &&
       receiver_address instanceof Array &&
-      receiver_address.length !== 1
+      receiver_address.length !== 1 &&
+      this.balance
     )
       return null;
     try {
@@ -170,13 +177,16 @@ class Account {
   receive(receives) {
     if (!this.standalone) return null;
     receives = receives.map((block) => {
+      if (!(block instanceof Block)) return;
+
+      console.log(block.data);
       const new_block = this.create_block({
         money: -1 * block.money, // transform the block money to +ve number
         reference_hash: block.hash[0],
         receiver_address: [block.sender_public],
         tags: [],
       });
-      if (new_block) {
+      if (new_block instanceof Block) {
         return new_block;
       } else return;
     });
@@ -193,16 +203,25 @@ class Account {
     }
   }
   scan() {
+    if (!this.standalone) return null;
     var receives = this.block_pool.new_send.map((block) => {
       // find a way to store the private key within the block
-      if (this.is_for_me(block) && block.money < 0) return block;
+      if (this.is_for_me(block) && block.money <= 0) {
+        console.log("receives updated")
+        return block;
+      }
     });
     this.block_pool.add({ new_receive: this.receive(receives) });
     return this.block_pool.clear();
   }
   is_for_me(block) {
-    if (this.#key_pair.getPublic().eq(genPublic(block.receiver_key))) {
-      return true;
+    if (!this.standalone) return false;
+    console.log(this.public_key + " " + block.receiver_key)
+    if (this.public_key === block.receiver_key[0]) {
+      {
+        console.log("yaaay a block for me");
+        return true;
+      }
     } else return false;
   }
   clean() {}

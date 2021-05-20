@@ -11,8 +11,8 @@ describe("The user", () => {
     });
 
     const g_block = genesis.create_block({
-      money: -50,
-      data: "genesis genius",
+      money: -80,
+      data: "",
       reference_hash: null,
       receiver_address: user_1.public_key, // i badly need money to test this...
       tags: [],
@@ -23,7 +23,7 @@ describe("The user", () => {
     user_1.scan();
 
     user_1.send({
-      money: 20,
+      money: 50,
       data: "yee",
       receiver_address: user_2.public_key,
       tags: [],

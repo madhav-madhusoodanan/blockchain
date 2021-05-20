@@ -29,7 +29,6 @@ class Blockchain {
     if (block && Block.is_valid(block) && verify_block(block)) {
       this.chain = [block].concat(this.chain);
       // adds blocks to the start
-      this.chain.forEach((block) => console.log(block.data));
       return true;
     } else return false;
   }

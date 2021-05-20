@@ -21,7 +21,6 @@ class Comm {
   // {new_send, new_receive, addresses, network}
   send(data_chunk) {
     /* this.comm.emit("data", data_chunk); */
-    console.log("hehe");
     return data_chunk; // for testing in amount.send
   }
 }

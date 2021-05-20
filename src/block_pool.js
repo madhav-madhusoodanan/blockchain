@@ -50,12 +50,14 @@ class Block_pool {
     new_send = new_send.map((block) => {
       if (
         block instanceof Block &&
-        block.block_public_key &&
+        /* block.block_public_key && */
         verify_block(block) &&
         Block.is_valid(block) &&
         block.money <= 0
       ) {
-        return block;
+        {
+          return block;
+        }
       }
     });
     new_send.forEach((send) => {
@@ -97,10 +99,11 @@ class Block_pool {
     });
 
     new_send.forEach((send) => {
-      if (send.hash[0] in this.recycle_bin) {
+      if (!send && send.hash[0] in this.recycle_bin) {
         return;
       } else this.new_send.push(send);
     });
+    
     this.recycle_bin = [];
     // remove both if both match, send the receive
     // remove just the receive if they dont match

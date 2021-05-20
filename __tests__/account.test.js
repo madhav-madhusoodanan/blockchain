@@ -9,7 +9,7 @@ describe("A normal account", () => {
 
     const block = account.create_block({
       money: -30,
-      data: "rekt noob",
+      data: "",
       reference_hash: null,
       receiver_address: user_1.public_key, 
       tags: [],
