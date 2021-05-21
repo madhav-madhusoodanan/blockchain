@@ -231,7 +231,16 @@ class Account {
             }
         });
         this.block_pool.add({ new_receive: this.receive(receives) });
-        return this.block_pool.clear();
+        const new_blocks = this.block_pool.clear();
+        new_blocks.new_send = new_blocks.new_send.map((block) => {
+            block.add_verifications = this.sign(block.hash[0]);
+            return block;
+        });
+        new_blocks.new_receive = new_blocks.new_receive.map((block) => {
+            block.add_verifications = this.sign(block.hash[0]);
+            return block;
+        });
+        return new_blocks;
     }
     is_for_me(block) {
         if (!this.standalone) return false;

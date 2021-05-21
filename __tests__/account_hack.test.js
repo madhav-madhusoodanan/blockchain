@@ -1,6 +1,6 @@
 // these use jest functions
 // the values in comments are the corresponding values intended for the genesis block
-const { Account } = require("../src");
+const { Account, Block } = require("../src");
 const { genKeyPair } = require("../util");
 describe("Account ", () => {
     it("make an account and generates a send block that is valid", () => {
@@ -26,7 +26,7 @@ describe("Account ", () => {
             tags: [],
         });
         // console.log(block.hash[0]); //0008451beb1a6f2e3952152c64fe0a50e1ee098160d4674317a3649294857d55
-        expect(block.is_valid).toEqual(true);
-        expect(account.balance).toEqual(20);
+        expect(Block.is_valid(block)).toEqual(false);
+        expect(account.balance).toEqual(0);
     });
 });

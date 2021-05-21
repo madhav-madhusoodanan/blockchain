@@ -72,12 +72,14 @@ class Block_pool {
                 return block;
             else;
         });
-        
+
         // setting up listeners for corresponding receive_blocks
         new_send.forEach((send) => {
             // send was till here
             // switching on just the new send blocks will cover the old send blocks too
             if (!send) return;
+            if (send.type.is_no_reply) return;
+            // add quorum checking here. if false, return
             if (!this.event.listenerCount(send.hash[0])) {
                 this.event.on(send.hash[0], (receive) => {
                     if (!(receive.money + send.money)) {
@@ -119,14 +121,15 @@ class Block_pool {
         // if it exists
         // // 1. update the corresponding address state if timestamp is newer
         // // // 1. if that block's meant for you, take it in XD
-        // // 2. sign on it
+        // // 2. sign on it (done after this, in the account/user part)
         // // 3. send it to others
         let new_set = this.new_receive.concat(this.new_send);
+        new_set.sort((a, b) => a.timestamp - b.timestamp)
         this.addresses = this.addresses.concat(addresses);
+        this.addresses.sort((a, b) => a.timestamp - b.timestamp);
         this.addresses = this.addresses.map((data) => {
-            new_set.sort((a, b) => a.timestamp - b.timestamp);
             let block = new_set.find(
-                (block) =>
+                (block) =>      // shouldnt this function be optimised?
                     block.sender_public === data.public &&
                     block.timestamp > data.timestamp
             );
@@ -144,3 +147,9 @@ class Block_pool {
     clear_if_acepted() {}
 }
 module.exports = Block_pool;
+
+/* send block ->
+ * 
+ * 1. send all blocks after validating it
+ * 2. process it only if it has quorum
+ * */

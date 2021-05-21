@@ -222,7 +222,7 @@ class User {
         }
     }
     sign(data_chunk) {
-        return this.#key_pair.sign(SHA256(data_chunk));
+        return this.#key_pair[1].sign(data_chunk);
     }
     scan() {
         this.received = this.block_pool.new_send.map((block) => {
@@ -233,7 +233,16 @@ class User {
         });
         this.receive(); // creates receive blocks for all of em
         this.block_pool.add({ new_receive: this.received });
-        this.comm.send(this.block_pool.clear());
+        const new_blocks = this.block_pool.clear();
+        new_blocks.new_send = new_blocks.new_send.map((block) => {
+            block.add_verifications = this.sign(block.hash[0]);
+            return block;
+        });
+        new_blocks.new_receive = new_blocks.new_receive.map((block) => {
+            block.add_verifications = this.sign(block.hash[0]);
+            return block;
+        });
+        this.comm.send(new_blocks);
     }
     is_for_me(block) {
         // memory refresher: if private key is a, then public key is A = aG

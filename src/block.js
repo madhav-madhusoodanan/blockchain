@@ -40,9 +40,11 @@ class Block {
         tags,
     }) {
         this.#hash = [null, null, null];
+        this.#data = [null, {}];    // object as 2nd part so that we can expand this
+        this.#type = new TYPE(tags, money, data);
         this.#initial_balance = initial_balance || 0;
         this.#money = money || null;
-        this.#data = data || null;
+        this.#data[0] = data || null;
         this.#sender_public = sender_public;
         this.#sender_signatures = [];
         this.#verifications = []; // proof of ppl 'yes'-ing its authenticity
@@ -53,7 +55,6 @@ class Block {
         this.#hash[0] = null; // hash representation of block
         this.#hash[1] = last_hash || LAST_HASH; // hash of last block in blockchain
         this.#hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
-        this.#type = new TYPE(tags, money, data);
         this.mine();
     }
     get initial_balance() {
@@ -63,7 +64,13 @@ class Block {
         return this.#money;
     }
     get data() {
-        return this.#data;
+        return this.#data[0];
+    }
+    get modifiable_data() {
+        return this.#data[1];
+    }
+    set modifiable_data(data) {
+        // how do you add data to the 2nd part?
     }
     get sender_signatures() {
         return this.#sender_signatures;
@@ -142,7 +149,7 @@ class Block {
             this.#hash[0] = SHA256(
                 this.#timestamp,
                 this.#hash[1],
-                this.#data,
+                this.#data[0],
                 this.#money,
                 this.#receiver_key,
                 this.#nonce,
