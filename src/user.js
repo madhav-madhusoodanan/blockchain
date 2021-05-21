@@ -93,16 +93,27 @@ class User {
             0
         );
     }
+    send_large_data({ data, receiver_address, tags }) {
+        // break the data into smaller chunks to
+        let data_chunk;
+        while (data_chunk)
+            this.send({
+                data: data_chunk,
+                receiver_address,
+                tags: ["speed"].concat(tags),
+            });
+    }
     send({
         money,
         data,
         receiver_address,
         tags /* only for independent types */,
+        /* sender account preferences */
     }) {
         try {
             let i = 0;
             if (money < 0 || money === Infinity) money = 0;
-            else if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
+            if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
                 const block = this.#accounts[0].create_block({
                     money: 0,
                     data,

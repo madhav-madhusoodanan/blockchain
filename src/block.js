@@ -90,16 +90,16 @@ class Block {
         return this.#sender_public;
     }
     get type() {
-        // one-time type casting
         return this.#type;
     }
     set add_verifications(verification) {
+        // add type checking
         if (verification) this.#verifications.push(verification);
     }
 
     static is_valid(block) {
         // data-only blocks return true
-        if (!block || block.type.is_spam) return false;
+        if (!(block instanceof Block) || block.type.is_spam) return false;
         if (!block.receiver_key) {
             block.receiver_key = BET_KEEPING_KEY;
         } else if (!block.money) {
@@ -107,8 +107,8 @@ class Block {
         }
         if (
             /* condition:
-             * if not SENDER_PUBLIC but negative total, true
-             * rest all false
+             * if not SENDER_PUBLIC but negative total, then condition is true
+             * rest all conditons, false
              *  */
             block.money + block.initial_balance < 0 &&
             block.sender_public !== SENDER_PUBLIC

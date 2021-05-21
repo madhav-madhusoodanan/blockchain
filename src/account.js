@@ -122,6 +122,20 @@ class Account {
         // else make just a normal signature
         return this.#key_pair.sign(data_chunk);
     }
+    send_large_data({ data, receiver_address, tags }) {
+        // break the data into smaller chunks to
+        let data_chunk;
+        const arr = [];
+        while (data_chunk)
+            arr.push(
+                this.send({
+                    data: data_chunk,
+                    receiver_address,
+                    tags: ["speed"].concat(tags),
+                })
+            );
+        return arr;
+    }
     send({
         money,
         data,
