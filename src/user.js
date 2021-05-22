@@ -215,8 +215,7 @@ class User {
         try {
             // transit data type: { new_receive, new_send, addresses, network }
             this.block_pool.add(data);
-            this.scan(); // the pool makes sure only legit blocks are passed
-            return true;
+            return this.scan(); // the pool makes sure only legit blocks are passed
         } catch (error) {
             return false;
         }
@@ -243,6 +242,7 @@ class User {
             return block;
         });
         this.comm.send(new_blocks);
+        return new_blocks;
     }
     is_for_me(block) {
         // memory refresher: if private key is a, then public key is A = aG

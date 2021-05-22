@@ -205,9 +205,8 @@ class Account {
                 receiver_address: [block.sender_public],
                 tags: [],
             });
-            if (new_block instanceof Block) {
-                return new_block;
-            } else return;
+            if (new_block instanceof Block) return new_block;
+            else return;
         });
         return receives;
     }
@@ -216,9 +215,9 @@ class Account {
         try {
             // transit data type: { new_receive, new_send, addresses, network }
             this.block_pool.add(data); // the pool makes sure only legit blocks are passed
-            this.scan();
-            return true;
+            return this.scan();
         } catch (error) {
+            console.error(error);
             return false;
         }
     }
@@ -226,17 +225,18 @@ class Account {
         if (!this.standalone) return null;
         var receives = this.block_pool.new_send.map((block) => {
             // find a way to store the private key within the block
-            if (this.is_for_me(block) && block.money <= 0) {
-                return block;
-            }
+            if (this.is_for_me(block) && block.money <= 0) return block;
         });
         this.block_pool.add({ new_receive: this.receive(receives) });
         const new_blocks = this.block_pool.clear();
         new_blocks.new_send = new_blocks.new_send.map((block) => {
+            if (!block) return;
             block.add_verifications = this.sign(block.hash[0]);
             return block;
         });
         new_blocks.new_receive = new_blocks.new_receive.map((block) => {
+            if (!block) return;
+            if (this.is_for_me(block)) return block;
             block.add_verifications = this.sign(block.hash[0]);
             return block;
         });
@@ -244,11 +244,9 @@ class Account {
     }
     is_for_me(block) {
         if (!this.standalone) return false;
-        if (this.public_key === block.receiver_key[0]) {
-            {
-                return true;
-            }
-        } else return false;
+        if (this.public_key === block.receiver_key[0]) return true;
+        if (this.public_key === block.sender_public) return true;
+        else return false;
     }
     clean() {}
 }

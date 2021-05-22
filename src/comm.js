@@ -7,7 +7,9 @@
  *
  * Need to find out a way to:
  * 1. Scan for servers and choose the least overloaded one
+ * <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script> for the html
  */
+
 const io = require("socket.io-client");
 class Comm {
     constructor(id) {

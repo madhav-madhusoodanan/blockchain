@@ -15,7 +15,7 @@ class Block_pool {
         this.new_receive = [];
         this.addresses = [];
         this.event = new EventEmitter();
-        this.recycle_bin = []; // list of block hashes to delete
+        this.recycle_bin = [];
     }
     get pool() {
         return this.pool;
@@ -46,7 +46,6 @@ class Block_pool {
         if (!(new_send instanceof Array)) new_send = [];
         if (!(new_receive instanceof Array)) new_receive = [];
         if (!(addresses instanceof Array)) addresses = [];
-        var recycle_bin = []; // list of block hashes to delete
 
         // filtering new_send and new_receive
         new_send = new_send.map((block) => {
@@ -56,11 +55,9 @@ class Block_pool {
                 verify_block(block) &&
                 Block.is_valid(block) &&
                 block.money <= 0
-            ) {
-                {
-                    return block;
-                }
-            }
+            )
+                return block;
+            else return null;
         });
         new_receive = new_receive.map((block) => {
             if (
@@ -70,53 +67,88 @@ class Block_pool {
                 block.money >= 0
             )
                 return block;
-            else;
+            else return null;
         });
 
         // setting up listeners for corresponding receive_blocks
         new_send.forEach((send) => {
-            // send was till here
             // switching on just the new send blocks will cover the old send blocks too
             if (!send) return;
             if (send.type.is_no_reply) return;
-            // add quorum checking here. if false, return
-            if (!this.event.listenerCount(send.hash[0])) {
-                this.event.on(send.hash[0], (receive) => {
+            if (
+                this.recycle_bin.find(
+                    (hash) => hash === send.hash[0].substring(0, 20)
+                )
+            )
+                return;
+            if (!this.event.listenerCount(send.hash[0].substring(0, 20))) {
+                // add quorum checking here. if false, return
+                this.new_send.push(send);
+                this.event.on(send.hash[0].substring(0, 20), (receive) => {
                     if (!(receive.money + send.money)) {
-                        this.event.off(send.hash[0], () => {});
-                        this.event.emit(receive.hash[0], true);
-                        recycle_bin.push(send.hash[0]);
-                    } else this.event.emit(receive.hash[0], false);
+                        this.event.emit(receive.hash[0].substring(0, 20), true);
+                        this.recycle_bin.push(send.hash[0].substring(0, 20));
+                        this.new_send.splice(
+                            this.new_send.findIndex(
+                                (block) =>
+                                    send.hash[0].substring(0, 20) ===
+                                    block.hash[0].substring(0, 20)
+                            ),
+                            1
+                        );
+                    } else
+                        this.event.emit(
+                            receive.hash[0].substring(0, 20),
+                            false
+                        );
                 });
             }
         });
 
         // triggering the respective send blocks
         new_receive.forEach((receive) => {
+            if (
+                !receive ||
+                this.new_receive.find(
+                    (block) =>
+                        block.hash[0].substring(0, 20) ==
+                        receive.hash[0].substring(0, 20)
+                )
+            )
+                return;
+            if (
+                this.recycle_bin.find(
+                    (hash) => hash === receive.hash[0].substring(0, 20)
+                )
+            )
+                return;
+            this.new_receive.push(receive);
+            this.event.once(receive.hash[0].substring(0, 20), (status) => {
+                this.recycle_bin.push(receive.hash[0].substring(0, 20));
+                if (!status) {
+                    this.new_receive.splice(
+                        this.new_receive.findIndex(
+                            (block) =>
+                                receive.hash[0].substring(0, 20) ===
+                                block.hash[0].substring(0, 20)
+                        ),
+                        1
+                    );
+                }
+            });
+            this.event.emit(receive.hash[2].substring(0, 20), receive);
+        });
+
+        new_receive.forEach((receive) => {
             // status describes if receive block matched the money or not
             // on so that atleast one 'true' response will validate it
             if (!receive) return;
-            this.event.on(receive.hash[0], (status) => {
-                if (status) {
-                    this.new_receive.push(receive);
-                    this.event.off(receive.hash[0], () => {});
-                }
-            });
-            this.event.emit(receive.hash[2], receive);
+            this.event.off(receive.hash[0].substring(0, 20), () => {});
         });
-
-        // clearing up any "deleted" send blocks
-        new_send.forEach((send) => {
-            if (!send && send.hash[0] in recycle_bin) {
-                return;
-            } else this.new_send.push(send);
-        });
-
-        recycle_bin = [];
+        this.recycle_bin.forEach((hash) => this.event.off(hash, () => {}));
         // remove both if both match, send the receive
         // remove just the receive if they dont match
         // add the pool to this.pool
-        this.new_receive = this.new_receive.concat(new_receive);
         // look at each block and search for the corresponding sender address
         // if it exists
         // // 1. update the corresponding address state if timestamp is newer
@@ -124,12 +156,14 @@ class Block_pool {
         // // 2. sign on it (done after this, in the account/user part)
         // // 3. send it to others
         let new_set = this.new_receive.concat(this.new_send);
-        new_set.sort((a, b) => a.timestamp - b.timestamp)
+        new_set.sort((a, b) => a.timestamp - b.timestamp);
         this.addresses = this.addresses.concat(addresses);
         this.addresses.sort((a, b) => a.timestamp - b.timestamp);
         this.addresses = this.addresses.map((data) => {
             let block = new_set.find(
-                (block) =>      // shouldnt this function be optimised?
+                (
+                    block // shouldnt this function be optimised?
+                ) =>
                     block.sender_public === data.public &&
                     block.timestamp > data.timestamp
             );
@@ -149,7 +183,10 @@ class Block_pool {
 module.exports = Block_pool;
 
 /* send block ->
- * 
+ *
  * 1. send all blocks after validating it
  * 2. process it only if it has quorum
+ *
+ * 3. add it to this.parts
+ * 4. if a valid receive block is found, delete it
  * */

@@ -34,7 +34,7 @@ const SHA256 = (...inputs) => {
             .join(" ")
     );
 
-    return hash.digest("hex");
+    return hash.digest("hex").trim();
 };
 
 module.exports = SHA256;
