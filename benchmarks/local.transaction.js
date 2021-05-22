@@ -16,13 +16,13 @@ const { Account } = require("../src");
         tags: [],
     });
 
-    console.timeEnd("genesis account makes a send block"); // 47.146 ms
+    console.timeEnd("genesis account makes a send block"); // 47.146ms 55.117ms
     console.time("the receiver updates his account");
     account_1.update_pool({
         new_send: [g_block],
     });
 
-    console.timeEnd("the receiver updates his account"); // 38.701ms
+    console.timeEnd("the receiver updates his account"); // 38.701ms 40.532ms
     console.time("the account makes a send block to a 3rd account");
     const block = account_1.send({
         money: 20,
@@ -30,9 +30,9 @@ const { Account } = require("../src");
         receiver_address: [account_2.public_key],
         tags: [],
     });
-    console.timeEnd("the account makes a send block to a 3rd account"); // 32.604 ms
+    console.timeEnd("the account makes a send block to a 3rd account"); // 29.687ms 32.604 ms
     console.time("the 3rd account is updated");
     account_2.update_pool({
         new_send: [block],
     });
-    console.timeEnd("the 3rd account is updated"); // 36.299 ms
+    console.timeEnd("the 3rd account is updated"); // 30.768ms 36.299 ms

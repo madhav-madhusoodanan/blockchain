@@ -40,22 +40,22 @@ class TYPE {
 
     // return true if yes, false if no
     get is_spam() {
-        return "spam" in this.#type;
+        return this.#type.find((tag) => tag === "spam");
     }
     get is_nft() {
-        return "nft" in this.#type;
+        return this.#type.find((tag) => tag === "nft");
     }
     get is_database() {
-        return "db" in this.#type;
+        return this.#type.find((tag) => tag === "db");
     }
     get is_contract() {
-        return "contract" in this.#type;
+        return this.#type.find((tag) => tag === "contract");
     }
     get is_speed() {
-        return "speed" in this.#type;
+        return this.#type.find((tag) => tag === "speed");
     }
     get is_no_reply() {
-        return "noreply" in this.#type;
+        return this.#type.find((tag) => tag === "noreply");
     }
 }
 
