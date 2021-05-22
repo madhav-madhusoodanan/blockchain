@@ -3,7 +3,7 @@
 const { Account, Block } = require("../src");
 const { genKeyPair } = require("../util");
 describe("Account ", () => {
-    it("make an account and generates a send block that is valid", () => {
+    it("tries to change its base balance but fails", () => {
         const data = "genesis";
         const account = new Account({});
         account.base_balance = 30;
