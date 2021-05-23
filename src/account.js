@@ -120,7 +120,7 @@ class Account {
     sign(data_chunk) {
         // // add rng signatures only if block is a send block
         // else make just a normal signature
-        return this.#key_pair.sign(data_chunk);
+        return this.#key_pair.sign(data_chunk).toDER();
     }
     send_large_data({ data, receiver_address, tags }) {
         // break the data into smaller chunks to
