@@ -1,5 +1,5 @@
 const { User, Account, Block } = require("../src");
-const { verify_block } = require("../util");
+const { verify_block, roughSizeOfObject } = require("../util");
 describe("The user", () => {
     it("can send any amount successfully within his limit", () => {
         const account_1 = new Account({ standalone: true });
@@ -17,7 +17,6 @@ describe("The user", () => {
             receiver_address: [account_1.public_key], // i badly need money to test this...
             tags: [],
         });
-
         expect(verify_block(g_block)).toEqual(true);
         expect(g_block.money <= 0).toEqual(true);
         expect(g_block instanceof Block).toEqual(true);
@@ -34,7 +33,6 @@ describe("The user", () => {
             receiver_address: [account_2.public_key],
             tags: [],
         });
-
         expect(account_1.blockchain.length).toEqual(2);
         expect(account_1.balance).toEqual(30);
 

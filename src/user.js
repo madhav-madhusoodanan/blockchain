@@ -221,7 +221,7 @@ class User {
         }
     }
     sign(data_chunk) {
-        return this.#key_pair[1].sign(data_chunk).toDER();
+        return this.#key_pair[1].sign(data_chunk).toDER("hex");
     }
     scan() {
         this.received = this.block_pool.new_send.map((block) => {
