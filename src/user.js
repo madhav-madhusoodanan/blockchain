@@ -183,7 +183,7 @@ class User {
 
         this.received = this.received.map(({ block, private_key }) => {
             const index = this.#accounts.findIndex(
-                (account) => account.public_key === block.receiver_key
+                (account) => account.public_key === block.receiver
             );
             if (index < 0) {
                 // no existing account is found, most common
@@ -191,7 +191,7 @@ class User {
                 const new_block = account.create_block({
                     money: -1 * block.money, // transform the block money to +ve number
                     reference_hash: block.hash[0],
-                    receiver_address: [block.sender_public],
+                    receiver_address: [block.sender],
                     tags: [],
                 });
                 if (new_block) {
@@ -203,7 +203,7 @@ class User {
                 const new_block = this.#accounts[index].create_block({
                     money: -1 * block.money, // transform the block money
                     reference_hash: block.hash[0],
-                    receiver_address: [block.sender_public],
+                    receiver_address: [block.sender],
                     tags: [],
                 });
                 if (new_block) return new_block;
@@ -249,11 +249,11 @@ class User {
         // where G is generator in elliptic curve
 
         // 1. Take the random data
-        // var R = block.block_public_key;
+        // var R = block.public_key;
         var a = this.#key_pair[0].getPrivate(); // a is 1st private key
         // making key-pair whose private key is SHA256 hash of (a*R)
         var temp_key = genKeyPair(
-            SHA256(genPublic(block.block_public_key).mul(a).encode("hex")) // block.block_public_key is of type Point
+            SHA256(genPublic(block.public_key).mul(a).encode("hex")) // block.public_key is of type Point
         );
         var B = this.#key_pair[1].getPublic(); // 2nd public key
         var temp = temp_key.getPublic();
@@ -262,7 +262,7 @@ class User {
         // 3. If P' = P(receiver address in the block)
         //  // then return its private key
         //  // else return null
-        if (P_prime.eq(genPublic(block.receiver_key))) {
+        if (P_prime.eq(genPublic(block.receiver))) {
             // private key (p) for the one time account is SHA256(a*R) + b
             // so that P = pG
             temp = temp_key.getPrivate();

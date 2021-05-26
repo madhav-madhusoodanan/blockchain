@@ -51,7 +51,7 @@ class Block_pool {
         new_send = new_send.map((block) => {
             if (
                 block instanceof Block &&
-                /* block.block_public_key && */
+                /* block.public_key && */
                 verify_block(block) &&
                 Block.is_valid(block) &&
                 block.money <= 0
@@ -164,7 +164,7 @@ class Block_pool {
                 (
                     block // shouldnt this function be optimised?
                 ) =>
-                    block.sender_public === data.public &&
+                    block.sender === data.public &&
                     block.timestamp > data.timestamp
             );
             if (block.initial_balance === data.money) {

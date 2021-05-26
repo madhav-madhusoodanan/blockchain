@@ -25,7 +25,7 @@ describe("The Genesis account", () => {
             new_send: [g_block],
         });
         expect(user_1.accounts.length).toEqual(1);
-        expect(user_1.accounts[0].public_key).toEqual(g_block.receiver_key);
+        expect(user_1.accounts[0].public_key).toEqual(g_block.receiver);
         expect(user_1.accounts[0].verify).toEqual(true);
         expect(user_1.balance).toEqual(70);
     });

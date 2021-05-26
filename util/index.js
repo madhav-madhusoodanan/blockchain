@@ -66,7 +66,7 @@ const random = () => crypto.randomBytes(32).toString("hex");
 const verify_block = (block) =>
     verifySignature({
         public_key:
-            block.sender_public /* type hex string of the account that made it */,
+            block.sender /* type hex string of the account that made it */,
         data: block.hash[0],
         signature: block.verifications[0],
     });

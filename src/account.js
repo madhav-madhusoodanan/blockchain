@@ -75,7 +75,7 @@ class Account {
         let initial_balance = this.balance || 0;
         if (receiver_address.length === 2) {
             // send block
-            // create a receiver_key and block_public_key from receiver_address
+            // create a receiver and public_key from receiver_address
             var random_key = genKeyPair(); // R = rG
             // verify and optimize the steps below
             var r = random_key.getPrivate();
@@ -84,17 +84,17 @@ class Account {
             var B = genPublic(receiver_address[1]);
             var random_key_2 = genKeyPair(SHA256(A.mul(r).encode("hex")));
             A = r = null;
-            var receiver_key = B.add(random_key_2.getPublic()); // receiver_key is of type point
+            var receiver = B.add(random_key_2.getPublic()); // receiver is of type point
             B = null;
             block = new Block({
                 initial_balance,
                 money,
                 data,
-                receiver_key: receiver_key.encode("hex"),
+                receiver: receiver.encode("hex"),
                 reference_hash,
                 last_hash,
-                block_public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
-                sender_public: this.#key_pair.getPublic().encode("hex"),
+                public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
+                sender: this.#key_pair.getPublic().encode("hex"),
                 tags,
             });
         } else if (receiver_address.length === 1) {
@@ -103,11 +103,11 @@ class Account {
                 initial_balance,
                 money,
                 data: data || "receive",
-                receiver_key: receiver_address,
+                receiver: receiver_address,
                 reference_hash,
                 last_hash,
-                block_public_key: null, // let this specifically be of type point
-                sender_public: this.#key_pair.getPublic().encode("hex"),
+                public_key: null, // let this specifically be of type point
+                sender: this.#key_pair.getPublic().encode("hex"),
                 tags,
             });
         } else return null;
@@ -202,7 +202,7 @@ class Account {
             const new_block = this.create_block({
                 money: -1 * block.money, // transform the block money to +ve number
                 reference_hash: block.hash[0],
-                receiver_address: [block.sender_public],
+                receiver_address: [block.sender],
                 tags: [],
             });
             if (new_block instanceof Block) return new_block;
@@ -244,8 +244,8 @@ class Account {
     }
     is_for_me(block) {
         if (!this.standalone) return false;
-        if (this.public_key === block.receiver_key[0]) return true;
-        if (this.public_key === block.sender_public) return true;
+        if (this.public_key === block.receiver[0]) return true;
+        if (this.public_key === block.sender) return true;
         else return false;
     }
     clean() {}

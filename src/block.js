@@ -8,7 +8,7 @@
  * 1. adding a signature is the job of the user/account
  * 2. -ve money indicates send, +ve money indicates receive
  * 3. private data members ensures data security
- * 4. receiver_key is of type bignum
+ * 4. receiver is of type bignum
  */
 const { SHA256 } = require("../util");
 const { DIFFICULTY, BET_KEEPING_KEY, TYPE } = require("./config");
@@ -18,39 +18,37 @@ class Block {
     #initial_balance;
     #money;
     #data;
-    #sender_signatures;
     #verifications;
-    #receiver_key;
+    #receiver;
     #timestamp;
-    #block_public_key;
+    #public_key;
     #nonce;
     #hash;
     #type;
-    #sender_public;
+    #sender;
 
     constructor({
         initial_balance,
         money,
         data,
-        receiver_key,
+        receiver,
         last_hash,
         reference_hash, // for receive blocks to reference send blocks
-        block_public_key,
-        sender_public,
+        public_key,
+        sender,
         tags,
     }) {
         this.#hash = [null, null, null];
-        this.#data = [null, {}];    // object as 2nd part so that we can expand this
+        this.#data = [null, {}]; // object as 2nd part so that we can expand this
         this.#type = new TYPE(tags, money, data);
         this.#initial_balance = initial_balance || 0;
         this.#money = money || null;
         this.#data[0] = data || null;
-        this.#sender_public = sender_public;
-        this.#sender_signatures = [];
+        this.#sender = sender;
         this.#verifications = []; // proof of ppl 'yes'-ing its authenticity
-        this.#receiver_key = receiver_key || null;
+        this.#receiver = receiver || null;
         this.#timestamp = Date.now();
-        this.#block_public_key = block_public_key || null; // the destination address
+        this.#public_key = public_key || null; // the destination address
         this.#nonce = null; // null + number = number, so its okay :)
         this.#hash[0] = null; // hash representation of block
         this.#hash[1] = last_hash || LAST_HASH; // hash of last block in blockchain
@@ -72,20 +70,17 @@ class Block {
     set modifiable_data(data) {
         // how do you add data to the 2nd part?
     }
-    get sender_signatures() {
-        return this.#sender_signatures;
-    }
     get verifications() {
         return this.#verifications;
     }
-    get receiver_key() {
-        return this.#receiver_key;
+    get receiver() {
+        return this.#receiver;
     }
     get timestamp() {
         return this.#timestamp;
     }
-    get block_public_key() {
-        return this.#block_public_key;
+    get public_key() {
+        return this.#public_key;
     }
     get nonce() {
         return this.#nonce;
@@ -93,8 +88,8 @@ class Block {
     get hash() {
         return this.#hash;
     }
-    get sender_public() {
-        return this.#sender_public;
+    get sender() {
+        return this.#sender;
     }
     get type() {
         return this.#type;
@@ -107,8 +102,8 @@ class Block {
     static is_valid(block) {
         // data-only blocks return true
         if (!(block instanceof Block) || block.type.is_spam) return false;
-        if (!block.receiver_key) {
-            block.receiver_key = BET_KEEPING_KEY;
+        if (!block.receiver) {
+            block.receiver = BET_KEEPING_KEY;
         } else if (!block.money) {
             return true;
         }
@@ -118,7 +113,7 @@ class Block {
              * rest all conditons, false
              *  */
             block.money + block.initial_balance < 0 &&
-            block.sender_public !== SENDER_PUBLIC
+            block.sender !== SENDER_PUBLIC
         ) {
             return false;
         }
@@ -135,7 +130,7 @@ class Block {
                 block.hash[1],
                 block.data,
                 block.money,
-                block.receiver_key,
+                block.receiver,
                 block.nonce,
                 block.initial_balance
             );
@@ -151,7 +146,7 @@ class Block {
                 this.#hash[1],
                 this.#data[0],
                 this.#money,
-                this.#receiver_key,
+                this.#receiver,
                 this.#nonce,
                 this.#initial_balance
             );
