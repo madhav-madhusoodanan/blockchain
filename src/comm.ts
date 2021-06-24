@@ -10,20 +10,22 @@
  * <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script> for the html
  */
 
-const io = require("socket.io-client");
-class Comm {
-    constructor(id) {
+import {io} from "socket.io-client";
+export interface Comm_Type extends Comm {}
+export class Comm {
+    comm: io;
+
+    constructor(id: string) {
         this.comm = io();
         // job of the server to handle the rooms
-        this.comm.emit("join", { id }, (error) => {
+        this.comm.emit("join", { id }, (error: Error) => {
             if (error) alert(error);
         });
     }
     // data_chunk must always be in object/json format
     // {new_send, new_receive, addresses, network}
-    send(data_chunk) {
+    send(data_chunk: any) {
         /* this.comm.emit("data", data_chunk); */
         return data_chunk; // for testing in amount.send
     }
 }
-module.exports = Comm;

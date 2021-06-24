@@ -30,65 +30,74 @@
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-const Account = require("./account");
-const Block = require("./block");
-const Comm = require("./comm");
-const Block_pool = require("./block_pool");
-const { SHA256, genKeyPair, genPublic, verify_block } = require("../util");
-class User {
-    // declaration of private fields
-    #key_pair;
-    #accounts;
+import {Block, Block_Type} from "./block";
+import {Block_pool_Type, Block_pool} from "./block_pool";
+import {Account, Account_Type} from "./account" ;
+import {Comm, Comm_Type} from "./comm" ;
 
-    constructor({ comm, block_pool, key_pair, accounts }) {
+import  { SHA256, genKeyPair, genPublic, verify_block } from "../util";
+export class User {
+    // declaration of private fields
+    private _key_pair: any[];
+    private _accounts: Account[];
+    public block_pool: Block_pool_Type; 
+    public received: Block_Type[];
+
+    constructor({ comm, block_pool, key_pair, accounts }: {
+        comm: Comm_Type;
+        block_pool: Block_pool_Type;
+        key_pair: any[];
+        accounts: Account_Type[]
+        
+    }) {
         this.block_pool = block_pool || new Block_pool();
-        this.#accounts = accounts || [];
-        this.#key_pair = key_pair || [genKeyPair(), genKeyPair()]; // this is an array of 2 key pairs
+        this._accounts = accounts || [];
+        this._key_pair = key_pair || [genKeyPair(), genKeyPair()]; // this is an array of 2 key pairs
         this.received = [];
         this.comm =
             comm ||
             new Comm(
                 `${SHA256(
-                    this.#key_pair[0].getPublic().encode("hex"),
-                    this.#key_pair[1].getPublic().encode("hex")
+                    this._key_pair[0].getPublic().encode("hex"),
+                    this._key_pair[1].getPublic().encode("hex")
                 )}`
             );
         this.comm.comm.on("data", (data) => {
             this.update_pool(data);
         });
 
-        this.#accounts.sort(
+        this._accounts.sort(
             (a, b) => a.balance - b.balance // ascending order of balance
         );
     }
     get tracking_key() {
         // should hex be changed to default type?
         return [
-            this.#key_pair[0].getPrivate("hex"),
-            this.#key_pair[1].getPublic("hex"),
+            this._key_pair[0].getPrivate("hex"),
+            this._key_pair[1].getPublic("hex"),
         ];
     }
 
     // i guess the below is pretty useless
     // get private_user_key() {
     //   return [
-    //     this.#key_pair[0].getPrivate("hex"),
-    //     this.#key_pair[1].getPrivate("hex"),
+    //     this._key_pair[0].getPrivate("hex"),
+    //     this._key_pair[1].getPrivate("hex"),
     //   ];
     // }
 
     get public_key() {
         return [
-            this.#key_pair[0].getPublic().encode("hex"),
-            this.#key_pair[1].getPublic().encode("hex"),
+            this._key_pair[0].getPublic().encode("hex"),
+            this._key_pair[1].getPublic().encode("hex"),
         ];
     }
     get accounts() {
-        return this.#accounts;
+        return this._accounts;
     }
     get balance() {
-        if (!(this.#accounts instanceof Array)) return 0;
-        return this.#accounts.reduce(
+        if (!(this._accounts instanceof Array)) return 0;
+        return this._accounts.reduce(
             (prev_total, account) => prev_total + account.balance,
             0
         );
@@ -114,7 +123,7 @@ class User {
             let i = 0;
             if (money < 0 || money === Infinity) money = 0;
             if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
-                const block = this.#accounts[0].create_block({
+                const block = this._accounts[0].create_block({
                     money: 0,
                     data,
                     receiver_address,
@@ -128,10 +137,10 @@ class User {
                 // what if money is null?
                 // then the 1st part of "while" condition is false (below)
                 while (money > 0 || data) {
-                    const balance = this.#accounts[i].balance;
+                    const balance = this._accounts[i].balance;
                     if (balance === Infinity) continue;
 
-                    const block = this.#accounts[i].create_block({
+                    const block = this._accounts[i].create_block({
                         money: money > balance ? -1 * balance : -1 * money,
                         data,
                         receiver_address,
@@ -153,7 +162,7 @@ class User {
             }
             if (money) throw new Error("insufficient Balance. Emptied it");
             // if account is empty, archive it
-            this.#accounts.forEach((account) => {
+            this._accounts.forEach((account) => {
                 if (!account.balance) {
                     // archive!
                     account.balance = Infinity;
@@ -162,7 +171,7 @@ class User {
                 }
             });
 
-            this.#accounts.sort(
+            this._accounts.sort(
                 (a, b) => a.balance - b.balance // ascending order of balance
             );
 
@@ -182,7 +191,7 @@ class User {
          */
 
         this.received = this.received.map(({ block, private_key }) => {
-            const index = this.#accounts.findIndex(
+            const index = this._accounts.findIndex(
                 (account) => account.public_key === block.receiver
             );
             if (index < 0) {
@@ -195,12 +204,12 @@ class User {
                     tags: [],
                 });
                 if (new_block) {
-                    this.#accounts.push(account);
+                    this._accounts.push(account);
                     return new_block;
                 } else return;
             } else {
                 // there is an account
-                const new_block = this.#accounts[index].create_block({
+                const new_block = this._accounts[index].create_block({
                     money: -1 * block.money, // transform the block money
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
@@ -221,7 +230,7 @@ class User {
         }
     }
     sign(data_chunk) {
-        return this.#key_pair[1].sign(data_chunk).toDER("hex");
+        return this._key_pair[1].sign(data_chunk).toDER("hex");
     }
     scan() {
         this.received = this.block_pool.new_send.map((block) => {
@@ -250,12 +259,12 @@ class User {
 
         // 1. Take the random data
         // var R = block.public_key;
-        var a = this.#key_pair[0].getPrivate(); // a is 1st private key
+        var a = this._key_pair[0].getPrivate(); // a is 1st private key
         // making key-pair whose private key is SHA256 hash of (a*R)
         var temp_key = genKeyPair(
             SHA256(genPublic(block.public_key).mul(a).encode("hex")) // block.public_key is of type Point
         );
-        var B = this.#key_pair[1].getPublic(); // 2nd public key
+        var B = this._key_pair[1].getPublic(); // 2nd public key
         var temp = temp_key.getPublic();
         // 2. calculate P' = SHA256(a*R)G + B
         var P_prime = temp.add(B);
@@ -266,7 +275,7 @@ class User {
             // private key (p) for the one time account is SHA256(a*R) + b
             // so that P = pG
             temp = temp_key.getPrivate();
-            var b = this.#key_pair[1].getPrivate();
+            var b = this._key_pair[1].getPrivate();
             return b.add(temp);
         } else return null;
     }
@@ -282,4 +291,3 @@ class User {
         // try to "save" user data locally
     }
 }
-module.exports = User;

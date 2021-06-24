@@ -11,26 +11,36 @@
  * it gives the money to the account in the start
  * can generate money just like that
  */
-const Block = require("./block");
-const Blockchain = require("./blockchain");
-const {
-    genKeyPair,
-    SHA256,
-    genPublic,
-    random,
-    verify_block,
-} = require("../util");
-const Block_pool = require("./block_pool");
+import { Block, Block_Type } from "./block";
+import { Blockchain, Blockchain_Type } from "./blockchain";
+import { Block_pool, Block_pool_Type } from "./block_pool";
+import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util";
 
 interface Account_Args {
-    blockchain: Blockchain
+    blockchain: Blockchain_Type;
+    key_pair: any[];
+    private_key: object | string | undefined;
+    standalone: boolean;
+}
+interface Receiver_Address {
+    0: string | undefined;
 }
 
+export interface Account_Type extends Account {}
 export class Account {
     // declaration of private fields
     private _key_pair;
     private _base_balance;
-    constructor({ blockchain, key_pair, private_key, standalone }) {
+    public blockchain: Blockchain_Type;
+    public standalone: boolean;
+    public block_pool: Block_pool_Type;
+
+    constructor({
+        blockchain,
+        key_pair,
+        private_key,
+        standalone,
+    }: Account_Args) {
         this.blockchain = blockchain || new Blockchain();
         if (standalone) {
             this.standalone = true;
@@ -61,34 +71,45 @@ export class Account {
         return this.blockchain.is_valid();
     }
     get account_verify() {
-        var data = random();
+        let data = random();
         return [this.public_key, data, this.sign(data)];
     }
 
-    create_block({ money, data, reference_hash, receiver_address, tags }) {
+    create_block({
+        money,
+        data,
+        reference_hash,
+        receiver_address,
+        tags,
+    }: {
+        money: number;
+        data: any;
+        reference_hash:  string | undefined;
+        receiver_address: Receiver_Address;
+        tags: string[];
+    }) {
         // receiver_address is an array of public keys
         // keep tight block validity checking here
         // create a one-time receiver_address and signatures too
         // money is already negative if it is a send block
-        var block;
-        var last_hash = this.blockchain.first()
+        let block: Block_Type;
+        let last_hash = this.blockchain.first()
                 ? this.blockchain.first().hash[0]
-                : null,
-            tags = tags || [];
+                : null;
         if (!(receiver_address instanceof Array)) return null;
         let initial_balance = this.balance || 0;
         if (receiver_address.length === 2) {
             // send block
             // create a receiver and public_key from receiver_address
-            var random_key = genKeyPair(); // R = rG
+            let random_key = genKeyPair(); // R = rG
             // verify and optimize the steps below
-            var r = random_key.getPrivate();
+            let r = random_key.getPrivate();
             // make the below more efficient)
-            var A = genPublic(receiver_address[0]);
-            var B = genPublic(receiver_address[1]);
-            var random_key_2 = genKeyPair(SHA256(A.mul(r).encode("hex")));
+            let A = genPublic(receiver_address[0]);
+            let B = genPublic(receiver_address[1]);
+            let random_key_2 = genKeyPair(SHA256(A.mul(r).encode("hex")));
             A = r = null;
-            var receiver = B.add(random_key_2.getPublic()); // receiver is of type point
+            let receiver = B.add(random_key_2.getPublic()); // receiver is of type point
             B = null;
             block = new Block({
                 initial_balance,
@@ -227,7 +248,7 @@ export class Account {
     }
     scan() {
         if (!this.standalone) return null;
-        var receives = this.block_pool.new_send.map((block) => {
+        let receives = this.block_pool.new_send.map((block) => {
             // find a way to store the private key within the block
             if (this.is_for_me(block) && block.money <= 0) return block;
         });

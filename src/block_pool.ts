@@ -5,13 +5,34 @@
  * 4. inform other transaction pools
  * 5. if an address is updated, send the update to others too
  */
-const Block = require("./block");
-const EventEmitter = require("events");
-const { verify_block } = require("../util");
+
+import EventEmitter from "events";
+import { verify_block } from "../util";
+import { Block_Type, Block } from "./block";
+
+interface Address_Type {
+    public: string;
+    money: number;
+    timestamp: number;
+    last_block: Block_Type;
+}
+interface Add_props {
+    new_receive: Block_Type[];
+    new_send: Block_Type[];
+    addresses: Address_Type[];
+    network: any;
+}
 
 
-class Block_pool {
-    old_send : Block[]
+export interface Block_pool_Type extends Block_pool {}
+export class Block_pool {
+    public old_send: Block_Type[];
+    public new_send: Block_Type[];
+    public new_receive: Block_Type[];
+    public addresses: Address_Type[];
+    public event: EventEmitter;
+    public recycle_bin: any[];
+
     constructor() {
         this.old_send = [];
         this.new_send = [];
@@ -42,18 +63,12 @@ class Block_pool {
         new_send,
         addresses,
         network /* to find if network is strong or not */,
-    }) {
+    }: Add_props) {
         // first, preliminary checking
         // should we return true, or the block itself (in array.map function?)
-
-        if (!(new_send instanceof Array)) new_send = [];
-        if (!(new_receive instanceof Array)) new_receive = [];
-        if (!(addresses instanceof Array)) addresses = [];
-
         // filtering new_send and new_receive
         new_send = new_send.map((block) => {
             if (
-                block instanceof Block &&
                 /* block.public_key && */
                 verify_block(block) &&
                 Block.is_valid(block) &&
@@ -162,10 +177,10 @@ class Block_pool {
         new_set.sort((a, b) => a.timestamp - b.timestamp);
         this.addresses = this.addresses.concat(addresses);
         this.addresses.sort((a, b) => a.timestamp - b.timestamp);
-        this.addresses = this.addresses.map((data) => {
+        this.addresses = this.addresses.map((data: Address_Type) => {
             let block = new_set.find(
                 (
-                    block // shouldnt this function be optimised?
+                    block: Block_Type // shouldnt this function be optimised?
                 ) =>
                     block.sender === data.public &&
                     block.timestamp > data.timestamp
@@ -173,7 +188,9 @@ class Block_pool {
             if (block.initial_balance === data.money) {
                 data.money += block.money;
                 data.timestamp = block.timestamp;
+                return data;
             }
+            else return data;
         });
         // if an address has new timestamp
     }
@@ -183,7 +200,6 @@ class Block_pool {
     set_map() {}
     clear_if_acepted() {}
 }
-module.exports = Block_pool;
 
 /* send block ->
  *

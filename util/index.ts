@@ -1,12 +1,13 @@
 const EC = require("elliptic").ec;
-const SHA256 = require("./crypto-hash");
-const curve = new EC("ed25519");
-var crypto = require("crypto");
+export { SHA256 } from "./crypto-hash";
+export const curve = new EC("ed25519");
+import crypto from "crypto";
+import { Block_Type } from "../src/block";
 
 function roughSizeOfObject(object) {
     var objectList = [];
-
-    var recurse = function (value) {
+    var i: any;
+    var recurse = function (value: any) {
         var bytes = 0;
 
         if (typeof value === "boolean") {
@@ -33,19 +34,19 @@ function roughSizeOfObject(object) {
     return recurse(object);
 }
 
-const verifySignature = ({
+export const verifySignature = ({
     public_key /* type hex string */,
     data /* type hex string (SHA256 hash already) */,
     signature,
 }) => {
-    // console.log(public_key);
-    // console.log(data);
-    // console.log(signature);
+    // console.log(public_key)
+    // console.log(data)
+    // console.log(signature)
     const keyFromPublic = curve.keyFromPublic(public_key, "hex");
     return keyFromPublic.verify(data, signature);
 };
-const genKeyPair = (private_key) => {
-    let key_pair;
+export const genKeyPair = (private_key?: Object | String | undefined) => {
+    let key_pair: any;
     /* how to add buffer? */
     if (private_key instanceof Object)
         key_pair = curve.keyFromPrivate(private_key);
@@ -57,26 +58,16 @@ const genKeyPair = (private_key) => {
 };
 
 // is this the fastest way for genPublic?
-const genPublic = (public_key) => {
-    if (typeof public_key === typeof "")
-        return curve.keyFromPublic(public_key, "hex").getPublic();
+export const genPublic = (public_key: string) => {
+    return curve.keyFromPublic(public_key, "hex").getPublic();
 };
 
-const random = () => crypto.randomBytes(32).toString("hex");
-const verify_block = (block) =>
+export const random = () => crypto.randomBytes(32).toString("hex");
+
+export const verify_block = (block: Block_Type) =>
     verifySignature({
         public_key:
             block.sender /* type hex string of the account that made it */,
         data: block.hash[0],
         signature: block.verifications[0],
     });
-module.exports = {
-    verifySignature,
-    SHA256,
-    genKeyPair,
-    curve,
-    genPublic,
-    random,
-    verify_block,
-    roughSizeOfObject,
-};

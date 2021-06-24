@@ -1,11 +1,11 @@
-const MINE_RATE = 1000;
-const DIFFICULTY = 1;
-const BET_KEEPING_KEY = "hehe-lolol";
+export const MINE_RATE = 1000;
+export const DIFFICULTY = 1;
+export const BET_KEEPING_KEY = "hehe-lolol";
 // const PHILANTHROPIST = [
 //   "042d7ad770372693a8ef5c8c1b6dbb66e9df23357478fbfed419fff3434b5f32083acb7936016ad9079670dc23bb85a2c9dc6af20025b514fdfd94426324ae4ee3",
 //   "0420c35897a0a40e25e735eb5c1e51f141072ee158da624614c25724b6bc073b4b7422399e5f5f9f545d3da946db795085c72b442f4235ef5565d48c5885de0874",
 // ];
-const GENESIS_DATA = {
+export const GENESIS_DATA = {
     money: 30,
     data: "genesis",
     RECEIVER_KEY:
@@ -17,9 +17,9 @@ const GENESIS_DATA = {
     tags: ["genesis"],
 };
 
-class TYPE {
-    #type;
-    constructor(tags, money, data) {
+export class TYPE {
+    #type: string[];
+    constructor(tags: string[], money: number, data: any) {
         /* process all the tags */
         if (!(tags instanceof Array)) tags = [];
         tags.forEach((tag) => {
@@ -35,45 +35,35 @@ class TYPE {
         });
         this.#type = tags || [];
         // add additional checks
-        return true;
     }
 
     // return true if yes, false if no
     get is_spam() {
-        return this.#type.find((tag) => tag === "spam");
+        return this.#type.find((tag: string) => tag === "spam");
     }
     get is_nft() {
-        return this.#type.find((tag) => tag === "nft");
+        return this.#type.find((tag: string) => tag === "nft");
     }
     get is_database() {
-        return this.#type.find((tag) => tag === "db");
+        return this.#type.find((tag: string) => tag === "db");
     }
     get is_contract() {
-        return this.#type.find((tag) => tag === "contract");
+        return this.#type.find((tag: string) => tag === "contract");
     }
     get is_speed() {
-        return this.#type.find((tag) => tag === "speed");
+        return this.#type.find((tag: string) => tag === "speed");
     }
     get is_no_reply() {
-        return this.#type.find((tag) => tag === "noreply");
+        return this.#type.find((tag: string) => tag === "noreply");
     }
 }
 
-const STARTING_BALANCE = 1000;
+export interface TYPE_type extends TYPE {}
 
-const REWARD_INPUT = {
+export const STARTING_BALANCE = 1000;
+
+export const REWARD_INPUT = {
     address: "oracle",
 };
 
-const MINING_REWARD = 50;
-
-module.exports = {
-    GENESIS_DATA,
-    MINE_RATE,
-    STARTING_BALANCE,
-    REWARD_INPUT,
-    MINING_REWARD,
-    DIFFICULTY,
-    TYPE,
-    BET_KEEPING_KEY,
-};
+export const MINING_REWARD = 50;
