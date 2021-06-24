@@ -12,7 +12,7 @@
 // const Block = require("./block");
 const { verify_block } = require("../util");
 const Block = require("./block");
-class Blockchain {
+export class Blockchain {
     constructor() {
         this.chain = [];
     }
@@ -54,4 +54,3 @@ class Blockchain {
         }
     }
 }
-module.exports = Blockchain;

@@ -8,7 +8,10 @@
 const Block = require("./block");
 const EventEmitter = require("events");
 const { verify_block } = require("../util");
+
+
 class Block_pool {
+    old_send : Block[]
     constructor() {
         this.old_send = [];
         this.new_send = [];

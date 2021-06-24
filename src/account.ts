@@ -22,10 +22,14 @@ const {
 } = require("../util");
 const Block_pool = require("./block_pool");
 
-class Account {
+interface Account_Args {
+    blockchain: Blockchain
+}
+
+export class Account {
     // declaration of private fields
-    #key_pair;
-    #base_balance;
+    private _key_pair;
+    private _base_balance;
     constructor({ blockchain, key_pair, private_key, standalone }) {
         this.blockchain = blockchain || new Blockchain();
         if (standalone) {
@@ -36,22 +40,22 @@ class Account {
             this.block_pool = null;
         }
 
-        if (key_pair) this.#key_pair = key_pair;
-        else this.#key_pair = genKeyPair(private_key);
+        if (key_pair) this._key_pair = key_pair;
+        else this._key_pair = genKeyPair(private_key);
         // its okay even if private key is null
 
-        this.#base_balance = 0; // will come in necessary when clearing blockchains
+        this._base_balance = 0; // will come in necessary when clearing blockchains
     }
     get public_key() {
-        return this.#key_pair.getPublic().encode("hex");
+        return this._key_pair.getPublic().encode("hex");
     }
 
     // key is present only for debugging
     get private_key() {
-        return this.#key_pair.getPrivate("hex");
+        return this._key_pair.getPrivate("hex");
     }
     get balance() {
-        return this.blockchain.balance(this.#base_balance);
+        return this.blockchain.balance(this._base_balance);
     }
     get verify() {
         return this.blockchain.is_valid();
@@ -94,7 +98,7 @@ class Account {
                 reference_hash,
                 last_hash,
                 public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
-                sender: this.#key_pair.getPublic().encode("hex"),
+                sender: this._key_pair.getPublic().encode("hex"),
                 tags,
             });
         } else if (receiver_address.length === 1) {
@@ -107,7 +111,7 @@ class Account {
                 reference_hash,
                 last_hash,
                 public_key: null, // let this specifically be of type point
-                sender: this.#key_pair.getPublic().encode("hex"),
+                sender: this._key_pair.getPublic().encode("hex"),
                 tags,
             });
         } else return null;
@@ -120,7 +124,7 @@ class Account {
     sign(data_chunk) {
         // // add rng signatures only if block is a send block
         // else make just a normal signature
-        return this.#key_pair.sign(data_chunk).toDER("hex");
+        return this._key_pair.sign(data_chunk).toDER("hex");
     }
     send_large_data({ data, receiver_address, tags }) {
         // break the data into smaller chunks to
@@ -250,4 +254,3 @@ class Account {
     }
     clean() {}
 }
-module.exports = Account;
