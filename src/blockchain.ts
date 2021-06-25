@@ -11,11 +11,10 @@
  */
 // const Block = require("./block");
 import { verify_block } from "../util";
-import { Block_Type, Block } from "./block";
+import { Block } from "./block";
 
-export interface Blockchain_Type extends Blockchain {}
 export class Blockchain {
-    chain: Block_Type[];
+    chain: Block[];
 
     constructor() {
         this.chain = [];
@@ -27,7 +26,7 @@ export class Blockchain {
     get length() {
         return this.chain.length;
     }
-    add_block(block: Block_Type) {
+    add_block(block: Block) {
         // "M" for money
         // other letters for different types
         if (block && Block.is_valid(block) && verify_block(block)) {

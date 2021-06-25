@@ -11,20 +11,19 @@
  * it gives the money to the account in the start
  * can generate money just like that
  */
-import { Block, Block_Type } from "./block";
-import { Blockchain, Blockchain_Type } from "./blockchain";
-import { Block_pool, Block_pool_Type } from "./block_pool";
+import { Block } from "./block";
+import { Blockchain } from "./blockchain";
+import { Block_pool } from "./block_pool";
 import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util";
 import { TYPE_enum, Receiver_Address, GENESIS_DATA } from "./config";
 
-export interface Account_Type extends Account {}
 export class Account {
     // declaration of private fields
     private _key_pair;
     private _base_balance: number;
-    public blockchain: Blockchain_Type;
+    public blockchain: Blockchain;
     public standalone: boolean;
-    public block_pool?: Block_pool_Type;
+    public block_pool?: Block_pool;
 
     constructor({
         blockchain,
@@ -32,7 +31,7 @@ export class Account {
         private_key,
         standalone,
     }: {
-        blockchain?: Blockchain_Type;
+        blockchain?: Blockchain;
         key_pair?: any[];
         private_key?: object | string;
         standalone?: boolean;
@@ -91,7 +90,7 @@ export class Account {
         // keep tight block validity checking here
         // create a one-time receiver_address and signatures too
         // money is already negative if it is a send block
-        let block: Block_Type;
+        let block: Block;
         let last_hash = this.blockchain.first()
             ? this.blockchain.first().hash[0]
             : GENESIS_DATA.LAST_HASH;
@@ -232,28 +231,30 @@ export class Account {
             return false;
         }
     }
-    receive(receives: Block_Type[]) {
-        if (!this.standalone) return null;
-        receives = receives.map((block) => {
-            if (!(block instanceof Block)) return;
+    receive(receives: Block[]) {
+        if (!this.standalone) return undefined;
+        receives = receives
+            .map((block: Block) => {
+                if (!(block instanceof Block)) return;
 
-            const new_block = this.create_block({
-                data: block.data,
-                money: -1 * block.money, // transform the block money to +ve number
-                reference_hash: block.hash[0],
-                receiver_address: [block.sender],
-                tags: [],
-            });
-            if (new_block instanceof Block) return new_block;
-            else return;
-        });
+                const new_block = this.create_block({
+                    data: block.data,
+                    money: -1 * block.money, // transform the block money to +ve number
+                    reference_hash: block.hash[0],
+                    receiver_address: [block.sender],
+                    tags: [],
+                });
+                if (new_block instanceof Block) return new_block;
+                else return;
+            })
+            .filter((block) => block) as Block[];
         return receives;
     }
     update_pool(data: any) {
         if (!this.standalone) return false;
         try {
             // transit data type: { new_receive, new_send, addresses, network }
-            this.block_pool.add(data); // the pool makes sure only legit blocks are passed
+            (this.block_pool as Block_pool).add(data); // the pool makes sure only legit blocks are passed
             return this.scan();
         } catch (error) {
             console.error(error);
@@ -262,26 +263,33 @@ export class Account {
     }
     scan() {
         if (!this.standalone) return null;
-        let receives = this.block_pool.new_send.map((block) => {
-            // find a way to store the private key within the block
-            if (this.is_for_me(block) && block.money <= 0) return block;
+        let receives = (this.block_pool as Block_pool).new_send.filter(
+            (block) =>
+                // find a way to store the private key within the block
+                this.is_for_me(block) && block.money <= 0
+        );
+        (this.block_pool as Block_pool).add({
+            new_receive: this.receive(receives),
         });
-        this.block_pool.add({ new_receive: this.receive(receives) });
-        const new_blocks = this.block_pool.clear();
-        new_blocks.new_send = new_blocks.new_send.map((block) => {
-            if (!block) return;
-            block.add_verifications = this.sign(block.hash[0]);
-            return block;
-        });
-        new_blocks.new_receive = new_blocks.new_receive.map((block) => {
-            if (!block) return;
-            if (this.is_for_me(block)) return block;
-            block.add_verifications = this.sign(block.hash[0]);
-            return block;
-        });
+        const new_blocks = (this.block_pool as Block_pool).clear();
+        new_blocks.new_send = new_blocks.new_send
+            .map((block) => {
+                if (!block) return;
+                block.add_verifications = this.sign(block.hash[0]);
+                return block;
+            })
+            .filter((send) => send) as Block[];
+        new_blocks.new_receive = new_blocks.new_receive
+            .map((block) => {
+                if (!block) return;
+                if (this.is_for_me(block)) return block;
+                block.add_verifications = this.sign(block.hash[0]);
+                return block;
+            })
+            .filter((receive) => receive) as Block[];
         return new_blocks;
     }
-    is_for_me(block) {
+    is_for_me(block: Block) {
         if (!this.standalone) return false;
         if (this.public_key === block.receiver[0]) return true;
         if (this.public_key === block.sender) return true;

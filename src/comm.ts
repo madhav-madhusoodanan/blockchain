@@ -11,7 +11,6 @@
  */
 
 import {io} from "socket.io-client";
-export interface Comm_Type extends Comm {}
 export class Comm {
     comm: io;
 

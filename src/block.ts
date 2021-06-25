@@ -11,7 +11,7 @@
  * 4. receiver is of type bignum
  */
 import { SHA256 } from "../util"
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_type, TYPE_enum} from "./config"
+import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_enum} from "./config"
 const {  LAST_HASH, SENDERPUBLIC } = require("./config").GENESISDATA
 
 interface Block_Args {
@@ -37,7 +37,6 @@ interface Data {
     1: object
 }
 
-export interface Block_Type extends Block {}
 export class Block {
     private _initial_balance: number
     private _money: number
@@ -48,7 +47,7 @@ export class Block {
     private _public_key: string | null
     private _nonce!: number
     private _hash: Hash
-    private _type: TYPE_type
+    private _type: TYPE
     private _sender: string
 
     constructor({
@@ -93,7 +92,7 @@ export class Block {
     public get sender(): string {
         return this._sender
     }
-    public get type(): TYPE_type {
+    public get type(): TYPE {
         return this._type
     }
     public get nonce(): number {

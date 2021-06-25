@@ -30,25 +30,25 @@
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-import { Block, Block_Type } from "./block";
-import { Block_pool_Type, Block_pool } from "./block_pool";
-import { Account, Account_Type } from "./account";
-import { Comm, Comm_Type } from "./comm";
+import { Block } from "./block";
+import { Block_pool } from "./block_pool";
+import { Account } from "./account";
+import { Comm } from "./comm";
 import { TYPE_enum, Receiver_Address } from "./config";
 import { SHA256, genKeyPair, genPublic, verify_block } from "../util";
 
 interface Received {
-    block: Block_Type;
-    private_key?: string;
+    block: Block;
+    private_key: string;
 }
 
 export class User {
     // declaration of private fields
     private _key_pair: any[];
     private _accounts: Account[];
-    private block_pool: Block_pool_Type;
-    private received: (Received | null | undefined)[];
-    private comm: Comm_Type;
+    private block_pool: Block_pool;
+    private received: Received[];
+    private comm: Comm;
 
     constructor({
         comm,
@@ -56,10 +56,10 @@ export class User {
         key_pair,
         accounts,
     }: {
-        comm: Comm_Type;
-        block_pool: Block_pool_Type;
+        comm: Comm;
+        block_pool: Block_pool;
         key_pair: any[];
-        accounts: Account_Type[];
+        accounts: Account[];
     }) {
         this.block_pool = block_pool || new Block_pool();
         this._accounts = accounts || [];
@@ -230,7 +230,7 @@ export class User {
                 });
                 if (new_block) {
                     this._accounts.push(account);
-                    return new_block;
+                    return {block: new_block, private_key};
                 } else return;
             } else {
                 // there is an account
@@ -240,10 +240,10 @@ export class User {
                     receiver_address: [block.sender],
                     tags: [],
                 });
-                if (new_block) return new_block;
+                if (new_block) return {block: new_block, private_key};
                 else return;
             }
-        });
+        }).filter(item => item) as Received[];
     }
     update_pool(data: any) {
         try {
@@ -258,14 +258,16 @@ export class User {
         return this._key_pair[1].sign(data_chunk).toDER("hex");
     }
     scan() {
-        this.received = this.block_pool.new_send.map((block) => {
+        this.block_pool.new_send.forEach((block) => {
             if (block.money > 0) return;
             const private_key = this.is_for_me(block);
             // find a way to store the private key within the block
-            if (private_key) return { block, private_key };
+            if (private_key) this.received.push({ block, private_key });
         });
         this.receive(); // creates receive blocks for all of em
-        this.block_pool.add({ new_receive: this.received });
+        this.block_pool.add({
+            new_receive: this.received.map((receive) => receive.block),
+        });
         const new_blocks = this.block_pool.clear();
         new_blocks.new_send = new_blocks.new_send.map((block) => {
             block.add_verifications = this.sign(block.hash[0]);
@@ -278,7 +280,7 @@ export class User {
         this.comm.send(new_blocks);
         return new_blocks;
     }
-    is_for_me(block: Block_Type) {
+    is_for_me(block: Block) {
         try {
             // memory refresher: if private key is a, then public key is A = aG
             // where G is generator in elliptic curve

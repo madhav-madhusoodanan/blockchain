@@ -58,7 +58,6 @@ export class TYPE {
     }
 }
 
-export interface TYPE_type extends TYPE {}
 export enum TYPE_enum {
     nft = "nft",
     speed = "speed",

@@ -8,27 +8,25 @@
 
 import EventEmitter from "events";
 import { verify_block } from "../util";
-import { Block_Type, Block } from "./block";
+import { Block } from "./block";
 
 interface Address_Type {
     public: string;
     money: number;
     timestamp: number;
-    last_block: Block_Type;
+    last_block: Block;
 }
 interface Add_props {
-    new_receive?: Block_Type[];
-    new_send?: Block_Type[];
+    new_receive?: Block[];
+    new_send?: Block[];
     addresses?: Address_Type[];
     network?: any;
 }
 
-
-export interface Block_pool_Type extends Block_pool {}
 export class Block_pool {
-    public old_send: Block_Type[];
-    public new_send: Block_Type[];
-    public new_receive: Block_Type[];
+    public old_send: Block[];
+    public new_send: Block[];
+    public new_receive: Block[];
     public addresses: Address_Type[];
     public event: EventEmitter;
     public recycle_bin: any[];
@@ -40,9 +38,6 @@ export class Block_pool {
         this.addresses = [];
         this.event = new EventEmitter();
         this.recycle_bin = [];
-    }
-    get pool() {
-        return this.pool;
     }
     // addresses = [{public, money, timestamp, last_block}, {}] type
     // set addresses(addresses) {
@@ -67,6 +62,8 @@ export class Block_pool {
         // first, preliminary checking
         // should we return true, or the block itself (in array.map function?)
         // filtering new_send and new_receive
+        new_send = new_send ? new_send : [];
+        new_receive = new_receive ? new_send: []
         new_send = new_send.map((block) => {
             if (
                 /* block.public_key && */
@@ -76,7 +73,7 @@ export class Block_pool {
             )
                 return block;
             else return null;
-        });
+        }).filter(send => send) as Block[];
         new_receive = new_receive.map((block) => {
             if (
                 block instanceof Block &&
@@ -86,7 +83,7 @@ export class Block_pool {
             )
                 return block;
             else return null;
-        });
+        }).filter(receive => receive) as Block[];
 
         // setting up listeners for corresponding receive_blocks
         new_send.forEach((send) => {
@@ -180,7 +177,7 @@ export class Block_pool {
         this.addresses = this.addresses.map((data: Address_Type) => {
             let block = new_set.find(
                 (
-                    block: Block_Type // shouldnt this function be optimised?
+                    block: Block // shouldnt this function be optimised?
                 ) =>
                     block.sender === data.public &&
                     block.timestamp > data.timestamp
