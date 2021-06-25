@@ -18,7 +18,7 @@ export const GENESIS_DATA = {
 };
 
 export class TYPE {
-    #type: string[];
+    private _type: string[];
     constructor(tags: string[], money: number, data: any) {
         /* process all the tags */
         if (!(tags instanceof Array)) tags = [];
@@ -33,32 +33,41 @@ export class TYPE {
             else if (tag.search(/loan/) + 1 && !money) return "loan";
             else return "spam";
         });
-        this.#type = tags || [];
+        this._type = tags || [];
         // add additional checks
     }
 
     // return true if yes, false if no
     get is_spam() {
-        return this.#type.find((tag: string) => tag === "spam");
+        return this._type.find((tag: string) => tag === "spam");
     }
     get is_nft() {
-        return this.#type.find((tag: string) => tag === "nft");
+        return this._type.find((tag: string) => tag === "nft");
     }
     get is_database() {
-        return this.#type.find((tag: string) => tag === "db");
+        return this._type.find((tag: string) => tag === "db");
     }
     get is_contract() {
-        return this.#type.find((tag: string) => tag === "contract");
+        return this._type.find((tag: string) => tag === "contract");
     }
     get is_speed() {
-        return this.#type.find((tag: string) => tag === "speed");
+        return this._type.find((tag: string) => tag === "speed");
     }
     get is_no_reply() {
-        return this.#type.find((tag: string) => tag === "noreply");
+        return this._type.find((tag: string) => tag === "noreply");
     }
 }
 
 export interface TYPE_type extends TYPE {}
+export enum TYPE_enum {
+    nft = "nft",
+    speed = "speed",
+    contract = "contract",
+    noreply = "noreply",
+    spam = "spam",
+    db = "db",
+    loan = "loan",
+}
 
 export const STARTING_BALANCE = 1000;
 
@@ -67,3 +76,9 @@ export const REWARD_INPUT = {
 };
 
 export const MINING_REWARD = 50;
+
+export interface Receiver_Address {
+    0: string;
+    1?: string;
+}
+

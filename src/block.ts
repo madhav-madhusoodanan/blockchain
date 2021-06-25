@@ -11,19 +11,19 @@
  * 4. receiver is of type bignum
  */
 import { SHA256 } from "../util"
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_type } from "./config"
-const { LASTHASH, SENDERPUBLIC } = require("./config").GENESISDATA
+import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_type, TYPE_enum} from "./config"
+const {  LAST_HASH, SENDERPUBLIC } = require("./config").GENESISDATA
 
 interface Block_Args {
-    initialbalance: number
+    initial_balance: number
     money: number
     data: any
     receiver: string
-    lasthash: string
-    referencehash: string // for receive blocks to reference send blocks
-    publickey: string
+    last_hash: string
+    reference_hash?: string // for receive blocks to reference send blocks
+    public_key: string | null
     sender: string
-    tags: string[]
+    tags: TYPE_enum[]
 }
 
 interface Hash {
@@ -39,44 +39,44 @@ interface Data {
 
 export interface Block_Type extends Block {}
 export class Block {
-    private _initialbalance: number
+    private _initial_balance: number
     private _money: number
     private _data: Data
     private _verifications: string[]
     private _receiver!: string
     private _timestamp: number
-    private _publickey: string | null
+    private _public_key: string | null
     private _nonce!: number
     private _hash: Hash
     private _type: TYPE_type
     private _sender: string
 
     constructor({
-        initialbalance,
+        initial_balance,
         money,
         data,
         receiver,
-        lasthash,
-        referencehash, // for receive blocks to reference send blocks
-        publickey,
+        last_hash,
+        reference_hash, // for receive blocks to reference send blocks
+        public_key,
         sender,
         tags,
     }: Block_Args) {
-        this._hash = ["", null, null]
+        this._hash = ["", last_hash || null, reference_hash || null]
         this._data = [null, {}] // object as 2nd part so that we can expand this
         this._type = new TYPE(tags, money, data)
-        this._initialbalance = initialbalance || 0
+        this._initial_balance = initial_balance || 0
         this._money = money || 0
         this._data[0] = data || null
         this._sender = sender
         this._verifications = [] // proof of ppl 'yes'-ing its authenticity
         this._receiver = receiver || ""
         this._timestamp = Date.now()
-        this._publickey = publickey || null // the destination address
+        this._public_key = public_key || null; // the destination address
         this._nonce = 0 // null + number = number, so its okay :)
         this._hash[0] = "" // hash representation of block
-        this._hash[1] = lasthash || LASTHASH // hash of last block in blockchain
-        this._hash[2] = referencehash || null // hash of the send block, this block is its receive block
+        this._hash[1] = last_hash || LAST_HASH // hash of last block in blockchain
+        this._hash[2] = reference_hash || null // hash of the send block, this block is its receive block
         this.mine()
     }
 
@@ -87,8 +87,8 @@ export class Block {
     public get timestamp(): number {
         return this._timestamp
     }
-    public get publickey(): string | null {
-        return this._publickey
+    public get public_key(): string | null {
+        return this._public_key
     }
     public get sender(): string {
         return this._sender
@@ -106,7 +106,7 @@ export class Block {
         return this._money
     }
     public get initial_balance(): number {
-        return this._initialbalance
+        return this._initial_balance
     }
     public get data() {
         return this._data[0]
@@ -128,44 +128,50 @@ export class Block {
         if (verification) this._verifications.push(verification)
     }
 
-    static is_valid(block: Block) {
+    static is_valid(block: Block | null) {
         // data-only blocks return true
         // if (!(block instanceof Block) || block.type.isspam) return false
-        if (!block._receiver) {
-            block._receiver = BET_KEEPING_KEY
-        } else if (!block._money) {
-            return true
+        try {
+            if(!block) return false;
+            if (!block._receiver) {
+                block._receiver = BET_KEEPING_KEY
+            } else if (!block._money) {
+                return true
+            }
+            if (
+                /* condition:
+                 * if not SENDERPUBLIC but negative total, then condition is true
+                 * rest all conditons, false
+                 *  */
+                block._money + block._initial_balance < 0 &&
+                block._sender !== SENDERPUBLIC
+            ) {
+                return false
+            }
+            // A block is valid if a nonce exists
+            // Not valid if money is Infinity
+            if (!block._nonce || block._money === Infinity) return false
+            // hashes exist
+            // 2. hash is verified
+            if (!block._hash[0] || !block._hash[1]) return false
+            // else if (!(block.money > 0) || !block.hash[2]) return false
+            else {
+                const hash = SHA256(
+                    block._timestamp,
+                    block._hash[1],
+                    block._data,
+                    block._money,
+                    block._receiver,
+                    block._nonce,
+                    block._initial_balance
+                )
+                return hash.substring(0, DIFFICULTY) === "0".repeat(DIFFICULTY)
+            }
+            // the block-pool will verify state changes...dont worry
+        } catch (err) {
+            return false;
         }
-        if (
-            /* condition:
-             * if not SENDERPUBLIC but negative total, then condition is true
-             * rest all conditons, false
-             *  */
-            block._money + block._initialbalance < 0 &&
-            block._sender !== SENDERPUBLIC
-        ) {
-            return false
-        }
-        // A block is valid if a nonce exists
-        // Not valid if money is Infinity
-        if (!block._nonce || block._money === Infinity) return false
-        // hashes exist
-        // 2. hash is verified
-        if (!block._hash[0] || !block._hash[1]) return false
-        // else if (!(block.money > 0) || !block.hash[2]) return false
-        else {
-            const hash = SHA256(
-                block._timestamp,
-                block._hash[1],
-                block._data,
-                block._money,
-                block._receiver,
-                block._nonce,
-                block._initialbalance
-            )
-            return hash.substring(0, DIFFICULTY) === "0".repeat(DIFFICULTY)
-        }
-        // the block-pool will verify state changes...dont worry
+        
     }
     mine() {
         do {
@@ -177,7 +183,7 @@ export class Block {
                 this._money,
                 this._receiver,
                 this._nonce,
-                this._initialbalance
+                this._initial_balance
             )
         } while (
             this._hash &&

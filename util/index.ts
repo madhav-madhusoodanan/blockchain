@@ -4,8 +4,8 @@ export const curve = new EC("ed25519");
 import crypto from "crypto";
 import { Block_Type } from "../src/block";
 
-function roughSizeOfObject(object) {
-    var objectList = [];
+export const roughSizeOfObject = (object: any) => {
+    var objectList: any[] = [];
     var i: any;
     var recurse = function (value: any) {
         var bytes = 0;
@@ -32,12 +32,16 @@ function roughSizeOfObject(object) {
     };
 
     return recurse(object);
-}
+};
 
 export const verifySignature = ({
     public_key /* type hex string */,
     data /* type hex string (SHA256 hash already) */,
     signature,
+}: {
+    public_key: string;
+    data: any;
+    signature: string;
 }) => {
     // console.log(public_key)
     // console.log(data)
@@ -58,16 +62,23 @@ export const genKeyPair = (private_key?: Object | String | undefined) => {
 };
 
 // is this the fastest way for genPublic?
-export const genPublic = (public_key: string) => {
+export const genPublic = (public_key?: string | null) => {
+    if(!public_key) throw new Error("Empty public key string");
     return curve.keyFromPublic(public_key, "hex").getPublic();
 };
 
 export const random = () => crypto.randomBytes(32).toString("hex");
 
-export const verify_block = (block: Block_Type) =>
-    verifySignature({
-        public_key:
-            block.sender /* type hex string of the account that made it */,
-        data: block.hash[0],
-        signature: block.verifications[0],
-    });
+export const verify_block = (block: Block_Type | null) => {
+    try {
+        if (!block) return false;
+        return verifySignature({
+            public_key:
+                block.sender /* type hex string of the account that made it */,
+            data: block.hash[0],
+            signature: block.verifications[0],
+        });
+    } catch (error) {
+        return false;
+    }
+};

@@ -17,10 +17,10 @@ interface Address_Type {
     last_block: Block_Type;
 }
 interface Add_props {
-    new_receive: Block_Type[];
-    new_send: Block_Type[];
-    addresses: Address_Type[];
-    network: any;
+    new_receive?: Block_Type[];
+    new_send?: Block_Type[];
+    addresses?: Address_Type[];
+    network?: any;
 }
 
 

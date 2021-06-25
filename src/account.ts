@@ -15,39 +15,35 @@ import { Block, Block_Type } from "./block";
 import { Blockchain, Blockchain_Type } from "./blockchain";
 import { Block_pool, Block_pool_Type } from "./block_pool";
 import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util";
-
-interface Account_Args {
-    blockchain: Blockchain_Type;
-    key_pair: any[];
-    private_key: object | string | undefined;
-    standalone: boolean;
-}
-interface Receiver_Address {
-    0: string | undefined;
-}
+import { TYPE_enum, Receiver_Address, GENESIS_DATA } from "./config";
 
 export interface Account_Type extends Account {}
 export class Account {
     // declaration of private fields
     private _key_pair;
-    private _base_balance;
+    private _base_balance: number;
     public blockchain: Blockchain_Type;
     public standalone: boolean;
-    public block_pool: Block_pool_Type;
+    public block_pool?: Block_pool_Type;
 
     constructor({
         blockchain,
         key_pair,
         private_key,
         standalone,
-    }: Account_Args) {
+    }: {
+        blockchain?: Blockchain_Type;
+        key_pair?: any[];
+        private_key?: object | string;
+        standalone?: boolean;
+    }) {
         this.blockchain = blockchain || new Blockchain();
         if (standalone) {
             this.standalone = true;
             this.block_pool = new Block_pool();
         } else {
             this.standalone = false;
-            this.block_pool = null;
+            this.block_pool = undefined;
         }
 
         if (key_pair) this._key_pair = key_pair;
@@ -56,21 +52,24 @@ export class Account {
 
         this._base_balance = 0; // will come in necessary when clearing blockchains
     }
-    get public_key() {
+    public get public_key() {
         return this._key_pair.getPublic().encode("hex");
     }
 
+    public set balance(balance: number) {
+        balance === Infinity ? (this._base_balance = Infinity) : null;
+    }
     // key is present only for debugging
-    get private_key() {
+    public get private_key() {
         return this._key_pair.getPrivate("hex");
     }
-    get balance() {
+    public get balance() {
         return this.blockchain.balance(this._base_balance);
     }
-    get verify() {
+    public get verify() {
         return this.blockchain.is_valid();
     }
-    get account_verify() {
+    public get account_verify() {
         let data = random();
         return [this.public_key, data, this.sign(data)];
     }
@@ -83,10 +82,10 @@ export class Account {
         tags,
     }: {
         money: number;
-        data: any;
-        reference_hash:  string | undefined;
+        data?: any;
+        reference_hash?: string;
         receiver_address: Receiver_Address;
-        tags: string[];
+        tags: TYPE_enum[];
     }) {
         // receiver_address is an array of public keys
         // keep tight block validity checking here
@@ -94,8 +93,8 @@ export class Account {
         // money is already negative if it is a send block
         let block: Block_Type;
         let last_hash = this.blockchain.first()
-                ? this.blockchain.first().hash[0]
-                : null;
+            ? this.blockchain.first().hash[0]
+            : GENESIS_DATA.LAST_HASH;
         if (!(receiver_address instanceof Array)) return null;
         let initial_balance = this.balance || 0;
         if (receiver_address.length === 2) {
@@ -115,12 +114,12 @@ export class Account {
                 initial_balance,
                 money,
                 data,
-                receiver: receiver.encode("hex"),
+                receiver: receiver.encode("hex") as string,
                 reference_hash,
                 last_hash,
-                public_key: random_key.getPublic().encode("hex"), // let this specifically be of type point
-                sender: this._key_pair.getPublic().encode("hex"),
-                tags,
+                public_key: random_key.getPublic().encode("hex") as string, // let this specifically be of type point
+                sender: this._key_pair.getPublic().encode("hex") as string,
+                tags: tags as TYPE_enum[],
             });
         } else if (receiver_address.length === 1) {
             // receive block
@@ -128,10 +127,10 @@ export class Account {
                 initial_balance,
                 money,
                 data: data || "receive",
-                receiver: receiver_address,
+                receiver: receiver_address[0],
                 reference_hash,
                 last_hash,
-                public_key: null, // let this specifically be of type point
+                public_key: null,
                 sender: this._key_pair.getPublic().encode("hex"),
                 tags,
             });
@@ -142,21 +141,30 @@ export class Account {
 
         return block;
     }
-    sign(data_chunk) {
+    sign(data_chunk: any): string {
         // // add rng signatures only if block is a send block
         // else make just a normal signature
-        return this._key_pair.sign(data_chunk).toDER("hex");
+        return this._key_pair.sign(data_chunk).toDER("hex") as string;
     }
-    send_large_data({ data, receiver_address, tags }) {
+    send_large_data({
+        data,
+        receiver_address,
+        tags,
+    }: {
+        data: any;
+        receiver_address: Receiver_Address;
+        tags: TYPE_enum[];
+    }) {
         // break the data into smaller chunks to
-        let data_chunk;
+        let data_chunk: any;
         const arr = [];
         while (data_chunk)
             arr.push(
                 this.send({
+                    money: 0,
                     data: data_chunk,
                     receiver_address,
-                    tags: ["speed"].concat(tags),
+                    tags: [TYPE_enum.speed].concat(tags),
                 })
             );
         return arr;
@@ -166,6 +174,11 @@ export class Account {
         data,
         receiver_address,
         tags /* only for independent types */,
+    }: {
+        money: number;
+        data: any;
+        receiver_address: Receiver_Address;
+        tags: TYPE_enum[];
     }) {
         if (
             // guard clauses
@@ -201,7 +214,7 @@ export class Account {
                 });
 
                 if (Block.is_valid(block) && verify_block(block)) {
-                    money += block.money;
+                    money += (block as Block).money;
                     data = null;
                     return block;
                 }
@@ -219,12 +232,13 @@ export class Account {
             return false;
         }
     }
-    receive(receives) {
+    receive(receives: Block_Type[]) {
         if (!this.standalone) return null;
         receives = receives.map((block) => {
             if (!(block instanceof Block)) return;
 
             const new_block = this.create_block({
+                data: block.data,
                 money: -1 * block.money, // transform the block money to +ve number
                 reference_hash: block.hash[0],
                 receiver_address: [block.sender],
@@ -235,7 +249,7 @@ export class Account {
         });
         return receives;
     }
-    update_pool(data) {
+    update_pool(data: any) {
         if (!this.standalone) return false;
         try {
             // transit data type: { new_receive, new_send, addresses, network }

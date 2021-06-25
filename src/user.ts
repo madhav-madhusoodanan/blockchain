@@ -30,25 +30,36 @@
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-import {Block, Block_Type} from "./block";
-import {Block_pool_Type, Block_pool} from "./block_pool";
-import {Account, Account_Type} from "./account" ;
-import {Comm, Comm_Type} from "./comm" ;
+import { Block, Block_Type } from "./block";
+import { Block_pool_Type, Block_pool } from "./block_pool";
+import { Account, Account_Type } from "./account";
+import { Comm, Comm_Type } from "./comm";
+import { TYPE_enum, Receiver_Address } from "./config";
+import { SHA256, genKeyPair, genPublic, verify_block } from "../util";
 
-import  { SHA256, genKeyPair, genPublic, verify_block } from "../util";
+interface Received {
+    block: Block_Type;
+    private_key?: string;
+}
+
 export class User {
     // declaration of private fields
     private _key_pair: any[];
     private _accounts: Account[];
-    public block_pool: Block_pool_Type; 
-    public received: Block_Type[];
+    private block_pool: Block_pool_Type;
+    private received: (Received | null | undefined)[];
+    private comm: Comm_Type;
 
-    constructor({ comm, block_pool, key_pair, accounts }: {
+    constructor({
+        comm,
+        block_pool,
+        key_pair,
+        accounts,
+    }: {
         comm: Comm_Type;
         block_pool: Block_pool_Type;
         key_pair: any[];
-        accounts: Account_Type[]
-        
+        accounts: Account_Type[];
     }) {
         this.block_pool = block_pool || new Block_pool();
         this._accounts = accounts || [];
@@ -62,7 +73,7 @@ export class User {
                     this._key_pair[1].getPublic().encode("hex")
                 )}`
             );
-        this.comm.comm.on("data", (data) => {
+        this.comm.comm.on("data", (data: any) => {
             this.update_pool(data);
         });
 
@@ -102,14 +113,23 @@ export class User {
             0
         );
     }
-    send_large_data({ data, receiver_address, tags }) {
+    send_large_data({
+        data,
+        receiver_address,
+        tags,
+    }: {
+        data: any;
+        receiver_address: Receiver_Address;
+        tags: TYPE_enum[];
+    }) {
         // break the data into smaller chunks to
-        let data_chunk;
+        let data_chunk: any;
         while (data_chunk)
             this.send({
-                data: data_chunk,
-                receiver_address,
-                tags: ["speed"].concat(tags),
+                money: 0,
+                data: data_chunk as any,
+                receiver_address: receiver_address as Receiver_Address,
+                tags: [TYPE_enum.speed].concat(tags),
             });
     }
     send({
@@ -117,7 +137,12 @@ export class User {
         data,
         receiver_address,
         tags /* only for independent types */,
-        /* sender account preferences */
+    }: /* sender account preferences */
+    {
+        money: number;
+        data: any;
+        receiver_address: Receiver_Address;
+        tags: TYPE_enum[];
     }) {
         try {
             let i = 0;
@@ -148,7 +173,7 @@ export class User {
                     });
 
                     if (Block.is_valid(block) && verify_block(block)) {
-                        money += block.money;
+                        money += (block as Block).money;
                         data = null;
                         this.comm.send(block);
                     }
@@ -201,7 +226,7 @@ export class User {
                     money: -1 * block.money, // transform the block money to +ve number
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
-                    tags: [],
+                    tags: [] as TYPE_enum[],
                 });
                 if (new_block) {
                     this._accounts.push(account);
@@ -220,7 +245,7 @@ export class User {
             }
         });
     }
-    update_pool(data) {
+    update_pool(data: any) {
         try {
             // transit data type: { new_receive, new_send, addresses, network }
             this.block_pool.add(data);
@@ -229,7 +254,7 @@ export class User {
             return false;
         }
     }
-    sign(data_chunk) {
+    sign(data_chunk: any) {
         return this._key_pair[1].sign(data_chunk).toDER("hex");
     }
     scan() {
@@ -253,31 +278,35 @@ export class User {
         this.comm.send(new_blocks);
         return new_blocks;
     }
-    is_for_me(block) {
-        // memory refresher: if private key is a, then public key is A = aG
-        // where G is generator in elliptic curve
+    is_for_me(block: Block_Type) {
+        try {
+            // memory refresher: if private key is a, then public key is A = aG
+            // where G is generator in elliptic curve
 
-        // 1. Take the random data
-        // var R = block.public_key;
-        var a = this._key_pair[0].getPrivate(); // a is 1st private key
-        // making key-pair whose private key is SHA256 hash of (a*R)
-        var temp_key = genKeyPair(
-            SHA256(genPublic(block.public_key).mul(a).encode("hex")) // block.public_key is of type Point
-        );
-        var B = this._key_pair[1].getPublic(); // 2nd public key
-        var temp = temp_key.getPublic();
-        // 2. calculate P' = SHA256(a*R)G + B
-        var P_prime = temp.add(B);
-        // 3. If P' = P(receiver address in the block)
-        //  // then return its private key
-        //  // else return null
-        if (P_prime.eq(genPublic(block.receiver))) {
-            // private key (p) for the one time account is SHA256(a*R) + b
-            // so that P = pG
-            temp = temp_key.getPrivate();
-            var b = this._key_pair[1].getPrivate();
-            return b.add(temp);
-        } else return null;
+            // 1. Take the random data
+            // var R = block.public_key;
+            var a = this._key_pair[0].getPrivate(); // a is 1st private key
+            // making key-pair whose private key is SHA256 hash of (a*R)
+            var temp_key = genKeyPair(
+                SHA256(genPublic(block.public_key).mul(a).encode("hex")) // block.public_key is of type Point
+            );
+            var B = this._key_pair[1].getPublic(); // 2nd public key
+            var temp = temp_key.getPublic();
+            // 2. calculate P' = SHA256(a*R)G + B
+            var P_prime = temp.add(B);
+            // 3. If P' = P(receiver address in the block)
+            //  // then return its private key
+            //  // else return null
+            if (P_prime.eq(genPublic(block.receiver))) {
+                // private key (p) for the one time account is SHA256(a*R) + b
+                // so that P = pG
+                temp = temp_key.getPrivate();
+                var b = this._key_pair[1].getPrivate();
+                return b.add(temp);
+            } else return null;
+        } catch (error) {
+            return false;
+        }
     }
     clean() {}
     static count() {}
