@@ -21,6 +21,8 @@ describe("The Genesis account", () => {
         });
 
         expect(Block.is_valid(g_block)).toEqual(true);
+        g_block.money = 20;
+        expect(g_block.money).toEqual(-70);
         user_1.update_pool({
             new_send: [g_block],
         });

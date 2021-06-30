@@ -126,7 +126,7 @@ class Block {
                 return false;
             // else if (!(block.money > 0) || !block.hash[2]) return false
             else {
-                const hash = util_1.SHA256(block._timestamp, block._hash[1], block._data, block._money, block._receiver, block._nonce, block._initial_balance);
+                const hash = util_1.SHA256(block.timestamp, block.hash[1], block.data, block.money, block.receiver, block.nonce, block.initial_balance);
                 return hash.substring(0, config_1.DIFFICULTY) === "0".repeat(config_1.DIFFICULTY);
             }
             // the block-pool will verify state changes...dont worry

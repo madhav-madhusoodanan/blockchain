@@ -158,13 +158,13 @@ export class Block {
             // else if (!(block.money > 0) || !block.hash[2]) return false
             else {
                 const hash = SHA256(
-                    block._timestamp,
-                    block._hash[1],
-                    block._data,
-                    block._money,
-                    block._receiver,
-                    block._nonce,
-                    block._initial_balance
+                    block.timestamp,
+                    block.hash[1],
+                    block.data,
+                    block.money,
+                    block.receiver,
+                    block.nonce,
+                    block.initial_balance
                 )
                 return hash.substring(0, DIFFICULTY) === "0".repeat(DIFFICULTY)
             }

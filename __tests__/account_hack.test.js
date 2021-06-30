@@ -28,5 +28,6 @@ describe("Account ", () => {
         // console.log(block.hash[0]); //0008451beb1a6f2e3952152c64fe0a50e1ee098160d4674317a3649294857d55
         expect(Block.is_valid(block)).toEqual(false);
         expect(account.balance).toEqual(0);
+        
     });
 });
