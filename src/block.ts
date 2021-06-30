@@ -12,7 +12,9 @@
  */
 import { SHA256 } from "../util"
 import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_enum} from "./config"
-const {  LAST_HASH, SENDERPUBLIC } = require("./config").GENESISDATA
+import {  GENESIS_DATA } from "./config"
+
+const {LAST_HASH, SENDER_PUBLIC} = GENESIS_DATA
 
 interface Block_Args {
     initial_balance: number
@@ -143,7 +145,7 @@ export class Block {
                  * rest all conditons, false
                  *  */
                 block._money + block._initial_balance < 0 &&
-                block._sender !== SENDERPUBLIC
+                block._sender !== SENDER_PUBLIC
             ) {
                 return false
             }

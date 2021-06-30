@@ -5,7 +5,7 @@ const circularReplacer = () => {
     // track of previously seen objects
     const seen = new WeakSet()
 
-    return (key, value) => {
+    return (key: any, value: any) => {
         // If type of value is an
         // object or value is null
         if (typeof value === "object" && value !== null) {
@@ -24,7 +24,7 @@ const circularReplacer = () => {
 }
 
 // variable argument number
-export const SHA256 = (...inputs) => {
+export const SHA256 = (...inputs: any[]) => {
     const hash = createHash("sha256")
 
     hash.update(

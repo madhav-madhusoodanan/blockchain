@@ -1,5 +1,5 @@
-const { Account, Block } = require("../src");
-const { verify_block } = require("../util");
+const { Account, Block } = require("../dist/src");
+const { verify_block } = require("../dist/util");
 describe("The user", () => {
     it("can send any amount successfully within his limit", () => {
         const account_1 = new Account({ standalone: true });

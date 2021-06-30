@@ -2,7 +2,7 @@ const EC = require("elliptic").ec;
 export { SHA256 } from "./crypto-hash";
 export const curve = new EC("ed25519");
 import crypto from "crypto";
-import { Block_Type } from "../src/block";
+import { Block } from "../src/block";
 
 export const roughSizeOfObject = (object: any) => {
     var objectList: any[] = [];
@@ -49,7 +49,7 @@ export const verifySignature = ({
     const keyFromPublic = curve.keyFromPublic(public_key, "hex");
     return keyFromPublic.verify(data, signature);
 };
-export const genKeyPair = (private_key?: Object | String | undefined) => {
+export const genKeyPair = (private_key?: Object | String) => {
     let key_pair: any;
     /* how to add buffer? */
     if (private_key instanceof Object)
@@ -69,7 +69,7 @@ export const genPublic = (public_key?: string | null) => {
 
 export const random = () => crypto.randomBytes(32).toString("hex");
 
-export const verify_block = (block: Block_Type | null) => {
+export const verify_block = (block: Block | null) => {
     try {
         if (!block) return false;
         return verifySignature({

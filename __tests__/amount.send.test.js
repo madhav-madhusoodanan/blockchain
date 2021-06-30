@@ -1,4 +1,4 @@
-const { User, Account, Block } = require("../src");
+const { User, Account, Block } = require("../dist/src");
 
 describe("The user", () => {
     it("can send any amount successfully within his limit", () => {

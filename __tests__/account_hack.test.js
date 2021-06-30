@@ -1,7 +1,7 @@
 // these use jest functions
 // the values in comments are the corresponding values intended for the genesis block
-const { Account, Block } = require("../src");
-const { genKeyPair } = require("../util");
+const { Account, Block } = require("../dist/src");
+const { genKeyPair } = require("../dist/util");
 describe("Account ", () => {
     it("tries to change its base balance but fails", () => {
         const data = "genesis";

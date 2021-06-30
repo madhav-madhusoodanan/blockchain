@@ -1,6 +1,6 @@
 // these use jest functions
 // the values in comments are the corresponding values intended for the genesis block
-const { User, Account, Block } = require("../src");
+const { User, Account, Block } = require("../dist/src");
 
 describe("A normal account", () => {
     it("cannot send any amount successfully", () => {
