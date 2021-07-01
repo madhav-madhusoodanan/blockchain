@@ -1,5 +1,5 @@
 // let { Account } = require("./dist/src")
-import {Account} from "../src/index.js";
+import {Account} from "./src/index.js";
 
     let account_1 = new Account({ standalone: true });
     let account_2 = new Account({ standalone: true });
@@ -17,13 +17,13 @@ import {Account} from "../src/index.js";
         tags: [],
     });
 
-    console.timeEnd("genesis account makes a send block"); // 47.146ms 55.117ms
+    console.timeEnd("genesis account makes a send block"); // 47.146ms 55.117ms 47.548ms
     console.time("the receiver updates his account");
     account_1.update_pool({
         new_send: [g_block],
     });
 
-    console.timeEnd("the receiver updates his account"); // 38.701ms 40.532ms
+    console.timeEnd("the receiver updates his account"); // 38.701ms 40.532ms 40.28ms
     console.time("the account makes a send block to a 3rd account");
     let block = account_1.send({
         money: 20,
@@ -31,9 +31,9 @@ import {Account} from "../src/index.js";
         receiver_address: [account_2.public_key],
         tags: [],
     });
-    console.timeEnd("the account makes a send block to a 3rd account"); // 29.687ms 32.604 ms
+    console.timeEnd("the account makes a send block to a 3rd account"); // 29.687ms 32.604ms 31.749ms
     console.time("the 3rd account is updated");
     account_2.update_pool({
         new_send: [block],
     });
-    console.timeEnd("the 3rd account is updated"); // 30.768ms 36.299 ms
+    console.timeEnd("the 3rd account is updated"); // 30.768ms 36.299 ms 27.565ms
