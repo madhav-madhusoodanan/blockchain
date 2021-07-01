@@ -1,7 +1,7 @@
 // these use jest functions
 // the values in comments are the corresponding values intended for the genesis block
-const { Account, Block } = require("../src");
-const { genKeyPair } = require("../util");
+const { Account, Block } = require("../dist/src");
+const { genKeyPair } = require("../dist/util");
 describe("Account ", () => {
     it("tries to change its base balance but fails", () => {
         const data = "genesis";
@@ -28,5 +28,6 @@ describe("Account ", () => {
         // console.log(block.hash[0]); //0008451beb1a6f2e3952152c64fe0a50e1ee098160d4674317a3649294857d55
         expect(Block.is_valid(block)).toEqual(false);
         expect(account.balance).toEqual(0);
+        
     });
 });

@@ -1,5 +1,5 @@
-const { Account, Block } = require("../src");
-const { verify_block } = require("../util");
+const { Account, Block } = require("../dist/src");
+const { verify_block } = require("../dist/util");
 describe("The user", () => {
     it("can send any amount successfully within his limit", () => {
         const account_1 = new Account({ standalone: true });
@@ -23,21 +23,17 @@ describe("The user", () => {
         expect(g_block.money <= 0).toEqual(true);
         expect(g_block instanceof Block).toEqual(true);
 
-        var pool = verifier.update_pool({
+        let pool = verifier.update_pool({
             new_send: [g_block],
         });
-        console.log(pool);
         expect(pool.new_send.length).toEqual(1);
         expect(pool.new_send[0].verifications.length).toEqual(2);
 
-        pool = account_1.update_pool(pool);
-
-        console.log(pool);
+        let pool_1 = account_1.update_pool(pool);
         expect(account_1.balance).toEqual(50);
-        expect(pool.new_send.length).toEqual(0);
-        expect(pool.new_receive.length).toEqual(1);
-        console.log(pool.new_receive[0].verifications)
-        expect(pool.new_receive[0].verifications.length).toEqual(1);
+        expect(pool_1.new_send.length).toEqual(0); // gotta be 0, temporarily changing to 1
+        expect(pool_1.new_receive.length).toEqual(1);
+        expect(pool_1.new_receive[0].verifications.length).toEqual(1);
 
         const block = account_1.send({
             money: 20,

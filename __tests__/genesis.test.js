@@ -1,6 +1,6 @@
 // these use jest functions
 // the values in comments are the corresponding values intended for the genesis block
-const { User, Account, Block } = require("../src");
+const { User, Account, Block } = require("../dist/src");
 
 describe("The Genesis account", () => {
     it("can send any amount successfully", () => {
@@ -21,6 +21,8 @@ describe("The Genesis account", () => {
         });
 
         expect(Block.is_valid(g_block)).toEqual(true);
+        g_block.money = 20;
+        expect(g_block.money).toEqual(-70);
         user_1.update_pool({
             new_send: [g_block],
         });

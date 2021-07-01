@@ -30,77 +30,106 @@
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-const Account = require("./account");
-const Block = require("./block");
-const Comm = require("./comm");
-const Block_pool = require("./block_pool");
-const { SHA256, genKeyPair, genPublic, verify_block } = require("../util");
-class User {
-    // declaration of private fields
-    #key_pair;
-    #accounts;
+import { Block } from "./block";
+import { Block_pool } from "./block_pool";
+import { Account } from "./account";
+import { Comm } from "./comm";
+import { TYPE_enum, Receiver_Address } from "./config";
+import { SHA256, genKeyPair, genPublic, verify_block } from "../util";
 
-    constructor({ comm, block_pool, key_pair, accounts }) {
+interface Received {
+    block: Block;
+    private_key: string;
+}
+
+export class User {
+    // declaration of private fields
+    private _key_pair: any[];
+    private _accounts: Account[];
+    private block_pool: Block_pool;
+    private received: Received[];
+    private comm: Comm;
+
+    constructor({
+        comm,
+        block_pool,
+        key_pair,
+        accounts,
+    }: {
+        comm: Comm;
+        block_pool: Block_pool;
+        key_pair: any[];
+        accounts: Account[];
+    }) {
         this.block_pool = block_pool || new Block_pool();
-        this.#accounts = accounts || [];
-        this.#key_pair = key_pair || [genKeyPair(), genKeyPair()]; // this is an array of 2 key pairs
+        this._accounts = accounts || [];
+        this._key_pair = key_pair || [genKeyPair(), genKeyPair()]; // this is an array of 2 key pairs
         this.received = [];
         this.comm =
             comm ||
             new Comm(
                 `${SHA256(
-                    this.#key_pair[0].getPublic().encode("hex"),
-                    this.#key_pair[1].getPublic().encode("hex")
+                    this._key_pair[0].getPublic().encode("hex"),
+                    this._key_pair[1].getPublic().encode("hex")
                 )}`
             );
-        this.comm.comm.on("data", (data) => {
+        this.comm.comm.on("data", (data: any) => {
             this.update_pool(data);
         });
 
-        this.#accounts.sort(
+        this._accounts.sort(
             (a, b) => a.balance - b.balance // ascending order of balance
         );
     }
     get tracking_key() {
         // should hex be changed to default type?
         return [
-            this.#key_pair[0].getPrivate("hex"),
-            this.#key_pair[1].getPublic("hex"),
+            this._key_pair[0].getPrivate("hex"),
+            this._key_pair[1].getPublic("hex"),
         ];
     }
 
     // i guess the below is pretty useless
     // get private_user_key() {
     //   return [
-    //     this.#key_pair[0].getPrivate("hex"),
-    //     this.#key_pair[1].getPrivate("hex"),
+    //     this._key_pair[0].getPrivate("hex"),
+    //     this._key_pair[1].getPrivate("hex"),
     //   ];
     // }
 
     get public_key() {
         return [
-            this.#key_pair[0].getPublic().encode("hex"),
-            this.#key_pair[1].getPublic().encode("hex"),
+            this._key_pair[0].getPublic().encode("hex"),
+            this._key_pair[1].getPublic().encode("hex"),
         ];
     }
     get accounts() {
-        return this.#accounts;
+        return this._accounts;
     }
     get balance() {
-        if (!(this.#accounts instanceof Array)) return 0;
-        return this.#accounts.reduce(
+        if (!(this._accounts instanceof Array)) return 0;
+        return this._accounts.reduce(
             (prev_total, account) => prev_total + account.balance,
             0
         );
     }
-    send_large_data({ data, receiver_address, tags }) {
+    send_large_data({
+        data,
+        receiver_address,
+        tags,
+    }: {
+        data: any;
+        receiver_address: Receiver_Address;
+        tags: TYPE_enum[];
+    }) {
         // break the data into smaller chunks to
-        let data_chunk;
+        let data_chunk: any;
         while (data_chunk)
             this.send({
-                data: data_chunk,
-                receiver_address,
-                tags: ["speed"].concat(tags),
+                money: 0,
+                data: data_chunk as any,
+                receiver_address: receiver_address as Receiver_Address,
+                tags: [TYPE_enum.speed].concat(tags),
             });
     }
     send({
@@ -108,13 +137,18 @@ class User {
         data,
         receiver_address,
         tags /* only for independent types */,
-        /* sender account preferences */
+    }: /* sender account preferences */
+    {
+        money: number;
+        data: any;
+        receiver_address: Receiver_Address;
+        tags: TYPE_enum[];
     }) {
         try {
             let i = 0;
             if (money < 0 || money === Infinity) money = 0;
             if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
-                const block = this.#accounts[0].create_block({
+                const block = this._accounts[0].create_block({
                     money: 0,
                     data,
                     receiver_address,
@@ -128,10 +162,10 @@ class User {
                 // what if money is null?
                 // then the 1st part of "while" condition is false (below)
                 while (money > 0 || data) {
-                    const balance = this.#accounts[i].balance;
+                    const balance = this._accounts[i].balance;
                     if (balance === Infinity) continue;
 
-                    const block = this.#accounts[i].create_block({
+                    const block = this._accounts[i].create_block({
                         money: money > balance ? -1 * balance : -1 * money,
                         data,
                         receiver_address,
@@ -139,7 +173,7 @@ class User {
                     });
 
                     if (Block.is_valid(block) && verify_block(block)) {
-                        money += block.money;
+                        money += (block as Block).money;
                         data = null;
                         this.comm.send(block);
                     }
@@ -153,7 +187,7 @@ class User {
             }
             if (money) throw new Error("insufficient Balance. Emptied it");
             // if account is empty, archive it
-            this.#accounts.forEach((account) => {
+            this._accounts.forEach((account) => {
                 if (!account.balance) {
                     // archive!
                     account.balance = Infinity;
@@ -162,7 +196,7 @@ class User {
                 }
             });
 
-            this.#accounts.sort(
+            this._accounts.sort(
                 (a, b) => a.balance - b.balance // ascending order of balance
             );
 
@@ -182,7 +216,7 @@ class User {
          */
 
         this.received = this.received.map(({ block, private_key }) => {
-            const index = this.#accounts.findIndex(
+            const index = this._accounts.findIndex(
                 (account) => account.public_key === block.receiver
             );
             if (index < 0) {
@@ -192,26 +226,26 @@ class User {
                     money: -1 * block.money, // transform the block money to +ve number
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
-                    tags: [],
+                    tags: [] as TYPE_enum[],
                 });
                 if (new_block) {
-                    this.#accounts.push(account);
-                    return new_block;
+                    this._accounts.push(account);
+                    return {block: new_block, private_key};
                 } else return;
             } else {
                 // there is an account
-                const new_block = this.#accounts[index].create_block({
+                const new_block = this._accounts[index].create_block({
                     money: -1 * block.money, // transform the block money
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
                     tags: [],
                 });
-                if (new_block) return new_block;
+                if (new_block) return {block: new_block, private_key};
                 else return;
             }
-        });
+        }).filter(item => item) as Received[];
     }
-    update_pool(data) {
+    update_pool(data: any) {
         try {
             // transit data type: { new_receive, new_send, addresses, network }
             this.block_pool.add(data);
@@ -220,18 +254,20 @@ class User {
             return false;
         }
     }
-    sign(data_chunk) {
-        return this.#key_pair[1].sign(data_chunk).toDER("hex");
+    sign(data_chunk: any) {
+        return this._key_pair[1].sign(data_chunk).toDER("hex");
     }
     scan() {
-        this.received = this.block_pool.new_send.map((block) => {
+        this.block_pool.new_send.forEach((block) => {
             if (block.money > 0) return;
             const private_key = this.is_for_me(block);
             // find a way to store the private key within the block
-            if (private_key) return { block, private_key };
+            if (private_key) this.received.push({ block, private_key });
         });
         this.receive(); // creates receive blocks for all of em
-        this.block_pool.add({ new_receive: this.received });
+        this.block_pool.add({
+            new_receive: this.received.map((receive) => receive.block),
+        });
         const new_blocks = this.block_pool.clear();
         new_blocks.new_send = new_blocks.new_send.map((block) => {
             block.add_verifications = this.sign(block.hash[0]);
@@ -244,31 +280,35 @@ class User {
         this.comm.send(new_blocks);
         return new_blocks;
     }
-    is_for_me(block) {
-        // memory refresher: if private key is a, then public key is A = aG
-        // where G is generator in elliptic curve
+    is_for_me(block: Block) {
+        try {
+            // memory refresher: if private key is a, then public key is A = aG
+            // where G is generator in elliptic curve
 
-        // 1. Take the random data
-        // var R = block.public_key;
-        var a = this.#key_pair[0].getPrivate(); // a is 1st private key
-        // making key-pair whose private key is SHA256 hash of (a*R)
-        var temp_key = genKeyPair(
-            SHA256(genPublic(block.public_key).mul(a).encode("hex")) // block.public_key is of type Point
-        );
-        var B = this.#key_pair[1].getPublic(); // 2nd public key
-        var temp = temp_key.getPublic();
-        // 2. calculate P' = SHA256(a*R)G + B
-        var P_prime = temp.add(B);
-        // 3. If P' = P(receiver address in the block)
-        //  // then return its private key
-        //  // else return null
-        if (P_prime.eq(genPublic(block.receiver))) {
-            // private key (p) for the one time account is SHA256(a*R) + b
-            // so that P = pG
-            temp = temp_key.getPrivate();
-            var b = this.#key_pair[1].getPrivate();
-            return b.add(temp);
-        } else return null;
+            // 1. Take the random data
+            // var R = block.public_key;
+            var a = this._key_pair[0].getPrivate(); // a is 1st private key
+            // making key-pair whose private key is SHA256 hash of (a*R)
+            var temp_key = genKeyPair(
+                SHA256(genPublic(block.public_key).mul(a).encode("hex")) // block.public_key is of type Point
+            );
+            var B = this._key_pair[1].getPublic(); // 2nd public key
+            var temp = temp_key.getPublic();
+            // 2. calculate P' = SHA256(a*R)G + B
+            var P_prime = temp.add(B);
+            // 3. If P' = P(receiver address in the block)
+            //  // then return its private key
+            //  // else return null
+            if (P_prime.eq(genPublic(block.receiver))) {
+                // private key (p) for the one time account is SHA256(a*R) + b
+                // so that P = pG
+                temp = temp_key.getPrivate();
+                var b = this._key_pair[1].getPrivate();
+                return b.add(temp);
+            } else return null;
+        } catch (error) {
+            return false;
+        }
     }
     clean() {}
     static count() {}
@@ -282,4 +322,3 @@ class User {
         // try to "save" user data locally
     }
 }
-module.exports = User;
