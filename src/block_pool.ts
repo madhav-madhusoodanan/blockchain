@@ -63,29 +63,33 @@ export class Block_pool {
         // should we return true, or the block itself (in array.map function?)
         // filtering new_send and new_receive
         new_send = new_send ? new_send : [];
-        new_receive = new_receive ? new_send: []
-        addresses = addresses ? addresses: []
-        new_send = new_send.map((block) => {
-            if (
-                /* block.public_key && */
-                verify_block(block) &&
-                Block.is_valid(block) &&
-                block.money <= 0
-            )
-                return block;
-            else return null;
-        }).filter(send => send) as Block[];
-        new_receive = new_receive.map((block) => {
-            if (
-                block instanceof Block &&
-                verify_block(block) &&
-                Block.is_valid(block) &&
-                block.money >= 0 &&
-                block.hash[2]
-            )
-                return block;
-            else return null;
-        }).filter(receive => receive) as Block[];
+        new_receive = new_receive ? new_receive : [];
+        addresses = addresses ? addresses : [];
+        new_send = new_send
+            .map((block) => {
+                if (
+                    /* block.public_key && */
+                    verify_block(block) &&
+                    Block.is_valid(block) &&
+                    block.money <= 0
+                )
+                    return block;
+                else return null;
+            })
+            .filter((send) => send) as Block[];
+        new_receive = new_receive
+            .map((block) => {
+                if (
+                    block instanceof Block &&
+                    verify_block(block) &&
+                    Block.is_valid(block) &&
+                    block.money >= 0 &&
+                    block.hash[2]
+                )
+                    return block;
+                else return null;
+            })
+            .filter((receive) => receive) as Block[];
 
         // setting up listeners for corresponding receive_blocks
         new_send.forEach((send) => {
@@ -153,7 +157,10 @@ export class Block_pool {
                     );
                 }
             });
-            this.event.emit((receive.hash[2] as string).substring(0, 20), receive);
+            this.event.emit(
+                (receive.hash[2] as string).substring(0, 20),
+                receive
+            );
         });
 
         new_receive.forEach((receive) => {
@@ -188,8 +195,7 @@ export class Block_pool {
                 data.money += block.money;
                 data.timestamp = block.timestamp;
                 return data;
-            }
-            else return data;
+            } else return data;
         });
         // if an address has new timestamp
     }

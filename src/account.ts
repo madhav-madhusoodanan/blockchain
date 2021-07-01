@@ -291,7 +291,7 @@ export class Account {
     }
     is_for_me(block: Block) {
         if (!this.standalone) return false;
-        if (this.public_key === block.receiver[0]) return true;
+        if (this.public_key === block.receiver) return true;
         if (this.public_key === block.sender) return true;
         else return false;
     }

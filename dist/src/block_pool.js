@@ -48,9 +48,10 @@ class Block_pool {
         // should we return true, or the block itself (in array.map function?)
         // filtering new_send and new_receive
         new_send = new_send ? new_send : [];
-        new_receive = new_receive ? new_send : [];
+        new_receive = new_receive ? new_receive : [];
         addresses = addresses ? addresses : [];
-        new_send = new_send.map((block) => {
+        new_send = new_send
+            .map((block) => {
             if (
             /* block.public_key && */
             util_1.verify_block(block) &&
@@ -59,8 +60,10 @@ class Block_pool {
                 return block;
             else
                 return null;
-        }).filter(send => send);
-        new_receive = new_receive.map((block) => {
+        })
+            .filter((send) => send);
+        new_receive = new_receive
+            .map((block) => {
             if (block instanceof block_1.Block &&
                 util_1.verify_block(block) &&
                 block_1.Block.is_valid(block) &&
@@ -69,7 +72,8 @@ class Block_pool {
                 return block;
             else
                 return null;
-        }).filter(receive => receive);
+        })
+            .filter((receive) => receive);
         // setting up listeners for corresponding receive_blocks
         new_send.forEach((send) => {
             // switching on just the new send blocks will cover the old send blocks too

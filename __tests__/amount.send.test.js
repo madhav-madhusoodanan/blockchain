@@ -16,8 +16,7 @@ describe("The user", () => {
             receiver_address: user_1.public_key, // i badly need money to test this...
             tags: [],
         });
-        g_block.money = 20;
-        console.log(g_block)
+        g_block.money = 20
         expect(Block.is_valid(g_block)).toEqual(true);
         user_1.update_pool({
             new_send: [g_block],
