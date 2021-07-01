@@ -4,7 +4,8 @@
     "type": "module",
     "private": true,
     "scripts": {
-        "test": "jest --watchAll"
+        "test": "jest --watchAll",
+        "benchmark": "node benchmarks/local.transaction.js"
     },
     "dependencies": {
         "bn.js": "^5.2.0",
