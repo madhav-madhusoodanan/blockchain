@@ -10,18 +10,20 @@
  * 1. Only the blockchain owner (user) has the power to write their own blockchain
  */
 // const Block = require("./block");
-import { verify_block, SHA256 } from "../util";
+import { verify_block } from "../util";
 import { Block } from "./block";
 
 export class Blockchain {
     private chain: Block[];
     private owner: string;
     private base_balance: number;
+    private update: number;
 
     constructor(owner: string) {
         this.chain = [];
         this.owner = owner;
-        this.base_balance = 0
+        this.base_balance = 0;
+        this.update = Date.now();
     }
     // set chain(chain) {
     //   this.chain = chain;
@@ -30,8 +32,8 @@ export class Blockchain {
     public get length() {
         return this.chain.length;
     }
-    public get identifier() {
-        return SHA256(this.owner);
+    public get identifier(): string {
+        return this.owner;
     }
     add_block(block: Block) {
         // "M" for money
@@ -43,6 +45,7 @@ export class Blockchain {
             (block.sender === this.owner || block.receiver === this.owner)
         ) {
             this.chain = [block].concat(this.chain);
+            this.update = block.timestamp;
             // adds blocks to the start
             return true;
         } else return false;
@@ -50,10 +53,10 @@ export class Blockchain {
     public get first() {
         return this.chain[0];
     }
-    public get latest_update() {
+    public get timestamp() {
         try {
             this.sort();
-            return this.first.timestamp;
+            return this.update;
         } catch {
             return 0;
         }
@@ -67,20 +70,22 @@ export class Blockchain {
             initial_balance || 0
         );
     }
-    is_valid() {
+    public get is_valid() {
         try {
             return (
-                this.balance(0) ===
+                this.chain.length === 0 ||
+                (this.balance(0) ===
                     this.first.initial_balance + this.first.money &&
-                this.chain.map((block: Block) => {
-                    if (
-                        this.owner === block.sender ||
-                        this.owner === block.receiver
-                    ) {
-                        return true;
-                    } else throw new Error("multiple personality syndrome :(");
-                }) &&
-                true
+                    this.chain.map((block: Block) => {
+                        if (
+                            this.owner === block.sender ||
+                            this.owner === block.receiver
+                        ) {
+                            return true;
+                        } else
+                            throw new Error("multiple personality syndrome :(");
+                    }) &&
+                    true)
             );
         } catch (error) {
             return false;
@@ -89,7 +94,5 @@ export class Blockchain {
     sort() {
         this.chain.sort((a, b) => b.timestamp - a.timestamp);
     }
-    prune() {
-        
-    }
+    prune() {}
 }
