@@ -16,13 +16,12 @@ exports.GENESIS_DATA = {
     SENDER_PUBLIC: "0412254552711e5bbe936b1b66ff889966ff31d87a9ddd8f6061de7fc68ead1c1a6c25c3b9e56859eb51c1c5deb27cb30212c6db815d10a05b9a4c35bb9704bd6a",
     tags: ["genesis"],
 };
-class TYPE {
-    _type;
-    constructor(tags, money, data) {
+var TYPE = /** @class */ (function () {
+    function TYPE(tags, money, data) {
         /* process all the tags */
         if (!(tags instanceof Array))
             tags = [];
-        tags.forEach((tag) => {
+        tags.forEach(function (tag) {
             // check if we can reduce the size
             if (money || data)
                 return "useful";
@@ -44,26 +43,51 @@ class TYPE {
         this._type = tags || [];
         // add additional checks
     }
-    // return true if yes, false if no
-    get is_spam() {
-        return this._type.find((tag) => tag === "spam");
-    }
-    get is_nft() {
-        return this._type.find((tag) => tag === "nft");
-    }
-    get is_database() {
-        return this._type.find((tag) => tag === "db");
-    }
-    get is_contract() {
-        return this._type.find((tag) => tag === "contract");
-    }
-    get is_speed() {
-        return this._type.find((tag) => tag === "speed");
-    }
-    get is_no_reply() {
-        return this._type.find((tag) => tag === "noreply");
-    }
-}
+    Object.defineProperty(TYPE.prototype, "is_spam", {
+        // return true if yes, false if no
+        get: function () {
+            return this._type.find(function (tag) { return tag === "spam"; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TYPE.prototype, "is_nft", {
+        get: function () {
+            return this._type.find(function (tag) { return tag === "nft"; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TYPE.prototype, "is_database", {
+        get: function () {
+            return this._type.find(function (tag) { return tag === "db"; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TYPE.prototype, "is_contract", {
+        get: function () {
+            return this._type.find(function (tag) { return tag === "contract"; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TYPE.prototype, "is_speed", {
+        get: function () {
+            return this._type.find(function (tag) { return tag === "speed"; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(TYPE.prototype, "is_no_reply", {
+        get: function () {
+            return this._type.find(function (tag) { return tag === "noreply"; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return TYPE;
+}());
 exports.TYPE = TYPE;
 var TYPE_enum;
 (function (TYPE_enum) {

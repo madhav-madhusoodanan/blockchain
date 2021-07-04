@@ -230,6 +230,7 @@ export class User {
                 });
                 if (new_block) {
                     this._accounts.push(account);
+                    this.block_pool.set_owners(this._accounts.map(account => account.public_key))
                     return {block: new_block, private_key};
                 } else return;
             } else {

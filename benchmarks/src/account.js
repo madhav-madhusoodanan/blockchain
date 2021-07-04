@@ -11,11 +11,11 @@
  * it gives the money to the account in the start
  * can generate money just like that
  */
-import { Block } from "./block.js";
-import { Blockchain } from "./blockchain.js";
-import { Block_pool } from "./block_pool.js";
-import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util/index.js";
-import { TYPE_enum, GENESIS_DATA } from "./config.js";
+import { Block } from "./block";
+import { Blockchain } from "./blockchain";
+import { Block_pool } from "./block_pool";
+import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util";
+import { TYPE_enum, GENESIS_DATA } from "./config";
 export class Account {
     // declaration of private fields
     _key_pair;
@@ -24,7 +24,6 @@ export class Account {
     standalone;
     block_pool;
     constructor({ blockchain, key_pair, private_key, standalone, }) {
-        this.blockchain = blockchain || new Blockchain();
         if (standalone) {
             this.standalone = true;
             this.block_pool = new Block_pool();
@@ -37,6 +36,9 @@ export class Account {
             this._key_pair = key_pair;
         else
             this._key_pair = genKeyPair(private_key);
+        this.blockchain =
+            blockchain ||
+                new Blockchain(this._key_pair.getPublic().encode("hex"));
         // its okay even if private key is null
         this._base_balance = 0; // will come in necessary when clearing blockchains
     }
@@ -66,8 +68,8 @@ export class Account {
         // create a one-time receiver_address and signatures too
         // money is already negative if it is a send block
         let block;
-        let last_hash = this.blockchain.first()
-            ? this.blockchain.first().hash[0]
+        let last_hash = this.blockchain.first
+            ? this.blockchain.first.hash[0]
             : GENESIS_DATA.LAST_HASH;
         if (!(receiver_address instanceof Array))
             return null;

@@ -36,18 +36,21 @@ export class Account {
         private_key?: object | string;
         standalone?: boolean;
     }) {
-        this.blockchain = blockchain || new Blockchain();
+        if (key_pair) this._key_pair = key_pair;
+        else this._key_pair = genKeyPair(private_key);
+        this.blockchain =
+            blockchain ||
+            new Blockchain(this._key_pair.getPublic().encode("hex"));
+        // its okay even if private key is null
         if (standalone) {
             this.standalone = true;
-            this.block_pool = new Block_pool();
+            this.block_pool = new Block_pool(
+                [this._key_pair.getPublic().encode("hex")]
+            );
         } else {
             this.standalone = false;
             this.block_pool = undefined;
         }
-
-        if (key_pair) this._key_pair = key_pair;
-        else this._key_pair = genKeyPair(private_key);
-        // its okay even if private key is null
 
         this._base_balance = 0; // will come in necessary when clearing blockchains
     }
@@ -91,8 +94,8 @@ export class Account {
         // create a one-time receiver_address and signatures too
         // money is already negative if it is a send block
         let block: Block;
-        let last_hash = this.blockchain.first()
-            ? this.blockchain.first().hash[0]
+        let last_hash = this.blockchain.first
+            ? this.blockchain.first.hash[0]
             : GENESIS_DATA.LAST_HASH;
         if (!(receiver_address instanceof Array)) return null;
         let initial_balance = this.balance || 0;

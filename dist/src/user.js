@@ -33,64 +33,77 @@ exports.User = void 0;
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-const block_1 = require("./block");
-const block_pool_1 = require("./block_pool");
-const account_1 = require("./account");
-const comm_1 = require("./comm");
-const config_1 = require("./config");
-const util_1 = require("../util");
-class User {
-    // declaration of private fields
-    _key_pair;
-    _accounts;
-    block_pool;
-    received;
-    comm;
-    constructor({ comm, block_pool, key_pair, accounts, }) {
+var block_1 = require("./block");
+var block_pool_1 = require("./block_pool");
+var account_1 = require("./account");
+var comm_1 = require("./comm");
+var config_1 = require("./config");
+var util_1 = require("../util");
+var User = /** @class */ (function () {
+    function User(_a) {
+        var _this = this;
+        var comm = _a.comm, block_pool = _a.block_pool, key_pair = _a.key_pair, accounts = _a.accounts;
         this.block_pool = block_pool || new block_pool_1.Block_pool();
         this._accounts = accounts || [];
         this._key_pair = key_pair || [util_1.genKeyPair(), util_1.genKeyPair()]; // this is an array of 2 key pairs
         this.received = [];
         this.comm =
             comm ||
-                new comm_1.Comm(`${util_1.SHA256(this._key_pair[0].getPublic().encode("hex"), this._key_pair[1].getPublic().encode("hex"))}`);
-        this.comm.comm.on("data", (data) => {
-            this.update_pool(data);
+                new comm_1.Comm("" + util_1.SHA256(this._key_pair[0].getPublic().encode("hex"), this._key_pair[1].getPublic().encode("hex")));
+        this.comm.comm.on("data", function (data) {
+            _this.update_pool(data);
         });
-        this._accounts.sort((a, b) => a.balance - b.balance // ascending order of balance
+        this._accounts.sort(function (a, b) { return a.balance - b.balance; } // ascending order of balance
         );
     }
-    get tracking_key() {
-        // should hex be changed to default type?
-        return [
-            this._key_pair[0].getPrivate("hex"),
-            this._key_pair[1].getPublic("hex"),
-        ];
-    }
-    // i guess the below is pretty useless
-    // get private_user_key() {
-    //   return [
-    //     this._key_pair[0].getPrivate("hex"),
-    //     this._key_pair[1].getPrivate("hex"),
-    //   ];
-    // }
-    get public_key() {
-        return [
-            this._key_pair[0].getPublic().encode("hex"),
-            this._key_pair[1].getPublic().encode("hex"),
-        ];
-    }
-    get accounts() {
-        return this._accounts;
-    }
-    get balance() {
-        if (!(this._accounts instanceof Array))
-            return 0;
-        return this._accounts.reduce((prev_total, account) => prev_total + account.balance, 0);
-    }
-    send_large_data({ data, receiver_address, tags, }) {
+    Object.defineProperty(User.prototype, "tracking_key", {
+        get: function () {
+            // should hex be changed to default type?
+            return [
+                this._key_pair[0].getPrivate("hex"),
+                this._key_pair[1].getPublic("hex"),
+            ];
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(User.prototype, "public_key", {
+        // i guess the below is pretty useless
+        // get private_user_key() {
+        //   return [
+        //     this._key_pair[0].getPrivate("hex"),
+        //     this._key_pair[1].getPrivate("hex"),
+        //   ];
+        // }
+        get: function () {
+            return [
+                this._key_pair[0].getPublic().encode("hex"),
+                this._key_pair[1].getPublic().encode("hex"),
+            ];
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(User.prototype, "accounts", {
+        get: function () {
+            return this._accounts;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(User.prototype, "balance", {
+        get: function () {
+            if (!(this._accounts instanceof Array))
+                return 0;
+            return this._accounts.reduce(function (prev_total, account) { return prev_total + account.balance; }, 0);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    User.prototype.send_large_data = function (_a) {
+        var data = _a.data, receiver_address = _a.receiver_address, tags = _a.tags;
         // break the data into smaller chunks to
-        let data_chunk;
+        var data_chunk;
         while (data_chunk)
             this.send({
                 money: 0,
@@ -98,18 +111,19 @@ class User {
                 receiver_address: receiver_address,
                 tags: [config_1.TYPE_enum.speed].concat(tags),
             });
-    }
-    send({ money, data, receiver_address, tags /* only for independent types */, }) {
+    };
+    User.prototype.send = function (_a) {
+        var money = _a.money, data = _a.data, receiver_address = _a.receiver_address, tags = _a.tags /* only for independent types */;
         try {
-            let i = 0;
+            var i = 0;
             if (money < 0 || money === Infinity)
                 money = 0;
             if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
-                const block = this._accounts[0].create_block({
+                var block = this._accounts[0].create_block({
                     money: 0,
-                    data,
-                    receiver_address,
-                    tags,
+                    data: data,
+                    receiver_address: receiver_address,
+                    tags: tags,
                 });
                 if (block_1.Block.is_valid(block) && util_1.verify_block(block))
                     this.comm.send(block);
@@ -119,14 +133,14 @@ class User {
                 // what if money is null?
                 // then the 1st part of "while" condition is false (below)
                 while (money > 0 || data) {
-                    const balance = this._accounts[i].balance;
+                    var balance = this._accounts[i].balance;
                     if (balance === Infinity)
                         continue;
-                    const block = this._accounts[i].create_block({
+                    var block = this._accounts[i].create_block({
                         money: money > balance ? -1 * balance : -1 * money,
-                        data,
-                        receiver_address,
-                        tags,
+                        data: data,
+                        receiver_address: receiver_address,
+                        tags: tags,
                     });
                     if (block_1.Block.is_valid(block) && util_1.verify_block(block)) {
                         money += block.money;
@@ -143,7 +157,7 @@ class User {
             if (money)
                 throw new Error("insufficient Balance. Emptied it");
             // if account is empty, archive it
-            this._accounts.forEach((account) => {
+            this._accounts.forEach(function (account) {
                 if (!account.balance) {
                     // archive!
                     account.balance = Infinity;
@@ -151,7 +165,7 @@ class User {
                     // when it is sorted
                 }
             });
-            this._accounts.sort((a, b) => a.balance - b.balance // ascending order of balance
+            this._accounts.sort(function (a, b) { return a.balance - b.balance; } // ascending order of balance
             );
             return true;
         }
@@ -159,8 +173,8 @@ class User {
             console.error(error);
             return false;
         }
-    }
-    receive() {
+    };
+    User.prototype.receive = function () {
         /* not like send()
          * makes just a receive block and returns it
          * 1. check if you have addresses of same private key
@@ -168,40 +182,43 @@ class User {
          * finding/creating the account
          * replace each block with a receive block
          */
-        this.received = this.received.map(({ block, private_key }) => {
-            const index = this._accounts.findIndex((account) => account.public_key === block.receiver);
+        var _this = this;
+        this.received = this.received.map(function (_a) {
+            var block = _a.block, private_key = _a.private_key;
+            var index = _this._accounts.findIndex(function (account) { return account.public_key === block.receiver; });
             if (index < 0) {
                 // no existing account is found, most common
-                const account = new account_1.Account({ private_key });
-                const new_block = account.create_block({
+                var account = new account_1.Account({ private_key: private_key });
+                var new_block = account.create_block({
                     money: -1 * block.money,
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
                     tags: [],
                 });
                 if (new_block) {
-                    this._accounts.push(account);
-                    return { block: new_block, private_key };
+                    _this._accounts.push(account);
+                    _this.block_pool.set_owners(_this._accounts.map(function (account) { return account.public_key; }));
+                    return { block: new_block, private_key: private_key };
                 }
                 else
                     return;
             }
             else {
                 // there is an account
-                const new_block = this._accounts[index].create_block({
+                var new_block = _this._accounts[index].create_block({
                     money: -1 * block.money,
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
                     tags: [],
                 });
                 if (new_block)
-                    return { block: new_block, private_key };
+                    return { block: new_block, private_key: private_key };
                 else
                     return;
             }
-        }).filter(item => item);
-    }
-    update_pool(data) {
+        }).filter(function (item) { return item; });
+    };
+    User.prototype.update_pool = function (data) {
         try {
             // transit data type: { new_receive, new_send, addresses, network }
             this.block_pool.add(data);
@@ -210,36 +227,37 @@ class User {
         catch (error) {
             return false;
         }
-    }
-    sign(data_chunk) {
+    };
+    User.prototype.sign = function (data_chunk) {
         return this._key_pair[1].sign(data_chunk).toDER("hex");
-    }
-    scan() {
-        this.block_pool.new_send.forEach((block) => {
+    };
+    User.prototype.scan = function () {
+        var _this = this;
+        this.block_pool.new_send.forEach(function (block) {
             if (block.money > 0)
                 return;
-            const private_key = this.is_for_me(block);
+            var private_key = _this.is_for_me(block);
             // find a way to store the private key within the block
             if (private_key)
-                this.received.push({ block, private_key });
+                _this.received.push({ block: block, private_key: private_key });
         });
         this.receive(); // creates receive blocks for all of em
         this.block_pool.add({
-            new_receive: this.received.map((receive) => receive.block),
+            new_receive: this.received.map(function (receive) { return receive.block; }),
         });
-        const new_blocks = this.block_pool.clear();
-        new_blocks.new_send = new_blocks.new_send.map((block) => {
-            block.add_verifications = this.sign(block.hash[0]);
+        var new_blocks = this.block_pool.clear();
+        new_blocks.new_send = new_blocks.new_send.map(function (block) {
+            block.add_verifications = _this.sign(block.hash[0]);
             return block;
         });
-        new_blocks.new_receive = new_blocks.new_receive.map((block) => {
-            block.add_verifications = this.sign(block.hash[0]);
+        new_blocks.new_receive = new_blocks.new_receive.map(function (block) {
+            block.add_verifications = _this.sign(block.hash[0]);
             return block;
         });
         this.comm.send(new_blocks);
         return new_blocks;
-    }
-    is_for_me(block) {
+    };
+    User.prototype.is_for_me = function (block) {
         try {
             // memory refresher: if private key is a, then public key is A = aG
             // where G is generator in elliptic curve
@@ -269,17 +287,18 @@ class User {
         catch (error) {
             return false;
         }
-    }
-    clean() { }
-    static count() { }
+    };
+    User.prototype.clean = function () { };
+    User.count = function () { };
     // can we really count the number of users on the system?
     // would help in quorum if that was possible
     // possible i guess: counting the number of websocket channels at any time
-    join() { }
-    leave() {
+    User.prototype.join = function () { };
+    User.prototype.leave = function () {
         this.comm.comm.disconnect();
         // clear the block_pool, keep the addresses
         // try to "save" user data locally
-    }
-}
+    };
+    return User;
+}());
 exports.User = User;

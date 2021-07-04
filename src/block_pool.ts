@@ -7,19 +7,14 @@
  */
 
 import EventEmitter from "events";
-import { verify_block } from "../util";
+import { SHA256, verify_block } from "../util";
 import { Block } from "./block";
+import { Blockchain } from "./blockchain";
 
-interface Address_Type {
-    public: string;
-    money: number;
-    timestamp: number;
-    last_block: Block;
-}
 interface Add_props {
     new_receive?: Block[];
     new_send?: Block[];
-    addresses?: Address_Type[];
+    addresses?: Blockchain[];
     network?: any;
 }
 
@@ -27,25 +22,30 @@ export class Block_pool {
     public old_send: Block[];
     public new_send: Block[];
     public new_receive: Block[];
-    public addresses: Address_Type[];
+    public addresses: Blockchain[];
     public event: EventEmitter;
     public recycle_bin: any[];
+    private owners: string[];
 
-    constructor() {
+    constructor(owners?: string[]) {
         this.old_send = [];
         this.new_send = [];
         this.new_receive = [];
         this.addresses = [];
         this.event = new EventEmitter();
         this.recycle_bin = [];
+        this.owners = owners || [];
     }
-    // addresses = [{public, money, timestamp, last_block}, {}] type
-    // set addresses(addresses) {
-    //   // addresses are not supposed to be erased
-    //   // find a way to update addresses or add new ones
-    //    if(addresses instanceof Array) this.addresses.concat(addresses);
-    //    else if(addresses instanceof Object) this.addresses.append(addresses);
-    // }
+    public get identifier() {
+        return this.owners.map((account_public_key) =>
+            SHA256(account_public_key)
+        );
+    }
+    public set_owners(owners: string[]) {
+        // focus on this set accessors
+        // ideally, pass in private keys for verification
+        this.owners = owners;
+    }
     clear() {
         this.old_send = this.old_send.concat(this.new_send);
         var new_send = this.new_send;
@@ -57,8 +57,8 @@ export class Block_pool {
         new_receive,
         new_send,
         addresses,
-        network /* to find if network is strong or not */,
-    }: Add_props) {
+    }: /* network,  to find if network is strong or not */
+    Add_props) {
         // first, preliminary checking
         // should we return true, or the block itself (in array.map function?)
         // filtering new_send and new_receive
@@ -181,29 +181,38 @@ export class Block_pool {
         // // 3. send it to others
         let new_set = this.new_receive.concat(this.new_send);
         new_set.sort((a, b) => a.timestamp - b.timestamp);
+
+        // addresses manipulation
+        addresses = addresses.filter(
+            (blockchain) => blockchain && blockchain.is_valid()
+        );
         this.addresses = this.addresses.concat(addresses);
-        this.addresses.sort((a, b) => a.timestamp - b.timestamp);
-        this.addresses = this.addresses.map((data: Address_Type) => {
-            let block = new_set.find(
-                (
-                    block: Block // shouldnt this function be optimised?
-                ) =>
-                    block.sender === data.public &&
-                    block.timestamp > data.timestamp
+        this.addresses.sort((a, b) => b.latest_update - a.latest_update);
+
+        // finding unique addresses and addresses that actually belongs to me
+        this.addresses = this.addresses.filter(
+            (blockchain, index, addresses) => {
+                return (
+                    addresses.findIndex(
+                        (item) => item.identifier === blockchain.identifier
+                    ) === index &&
+                    !this.identifier.find((id) => id === blockchain.identifier)
+                ); // unique blockchains, and nothing about the original owner
+            }
+        );
+
+        this.addresses = this.addresses.map((blockchain) => {
+            const block = new_set.find(
+                (block) =>
+                    block.identifier === blockchain.identifier &&
+                    block.hash[1] === blockchain.first.hash[0] &&
+                    block.timestamp > blockchain.latest_update &&
+                    block.money + blockchain.balance() > 0
             );
-            if (block && block.initial_balance === data.money) {
-                data.money += block.money;
-                data.timestamp = block.timestamp;
-                return data;
-            } else return data;
+            if (block) blockchain.add_block(block);
+            return blockchain;
         });
-        // if an address has new timestamp
     }
-    remove() {} // accepts an array of block hashes to remove
-    return_existing() {}
-    return_valid() {}
-    set_map() {}
-    clear_if_acepted() {}
 }
 
 /* send block ->

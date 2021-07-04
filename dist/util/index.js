@@ -4,12 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verify_block = exports.random = exports.genPublic = exports.genKeyPair = exports.verifySignature = exports.roughSizeOfObject = exports.curve = exports.SHA256 = void 0;
-const EC = require("elliptic").ec;
+var EC = require("elliptic").ec;
 var crypto_hash_1 = require("./crypto-hash");
 Object.defineProperty(exports, "SHA256", { enumerable: true, get: function () { return crypto_hash_1.SHA256; } });
 exports.curve = new EC("ed25519");
-const crypto_1 = __importDefault(require("crypto"));
-const roughSizeOfObject = (object) => {
+var crypto_1 = __importDefault(require("crypto"));
+var roughSizeOfObject = function (object) {
     var objectList = [];
     var i;
     var recurse = function (value) {
@@ -36,16 +36,17 @@ const roughSizeOfObject = (object) => {
     return recurse(object);
 };
 exports.roughSizeOfObject = roughSizeOfObject;
-const verifySignature = ({ public_key /* type hex string */, data /* type hex string (SHA256 hash already) */, signature, }) => {
+var verifySignature = function (_a) {
+    var public_key = _a.public_key /* type hex string */, data = _a.data /* type hex string (SHA256 hash already) */, signature = _a.signature;
     // console.log(public_key)
     // console.log(data)
     // console.log(signature)
-    const keyFromPublic = exports.curve.keyFromPublic(public_key, "hex");
+    var keyFromPublic = exports.curve.keyFromPublic(public_key, "hex");
     return keyFromPublic.verify(data, signature);
 };
 exports.verifySignature = verifySignature;
-const genKeyPair = (private_key) => {
-    let key_pair;
+var genKeyPair = function (private_key) {
+    var key_pair;
     /* how to add buffer? */
     if (private_key instanceof Object)
         key_pair = exports.curve.keyFromPrivate(private_key);
@@ -57,15 +58,15 @@ const genKeyPair = (private_key) => {
 };
 exports.genKeyPair = genKeyPair;
 // is this the fastest way for genPublic?
-const genPublic = (public_key) => {
+var genPublic = function (public_key) {
     if (!public_key)
         throw new Error("Empty public key string");
     return exports.curve.keyFromPublic(public_key, "hex").getPublic();
 };
 exports.genPublic = genPublic;
-const random = () => crypto_1.default.randomBytes(32).toString("hex");
+var random = function () { return crypto_1.default.randomBytes(32).toString("hex"); };
 exports.random = random;
-const verify_block = (block) => {
+var verify_block = function (block) {
     try {
         if (!block)
             return false;

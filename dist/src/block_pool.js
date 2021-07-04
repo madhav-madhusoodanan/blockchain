@@ -11,39 +11,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Block_pool = void 0;
-const events_1 = __importDefault(require("events"));
-const util_1 = require("../util");
-const block_1 = require("./block");
-class Block_pool {
-    old_send;
-    new_send;
-    new_receive;
-    addresses;
-    event;
-    recycle_bin;
-    constructor() {
+var events_1 = __importDefault(require("events"));
+var util_1 = require("../util");
+var block_1 = require("./block");
+var Block_pool = /** @class */ (function () {
+    function Block_pool(owners) {
         this.old_send = [];
         this.new_send = [];
         this.new_receive = [];
         this.addresses = [];
         this.event = new events_1.default();
         this.recycle_bin = [];
+        this.owners = owners || [];
     }
-    // addresses = [{public, money, timestamp, last_block}, {}] type
-    // set addresses(addresses) {
-    //   // addresses are not supposed to be erased
-    //   // find a way to update addresses or add new ones
-    //    if(addresses instanceof Array) this.addresses.concat(addresses);
-    //    else if(addresses instanceof Object) this.addresses.append(addresses);
-    // }
-    clear() {
+    Object.defineProperty(Block_pool.prototype, "identifier", {
+        get: function () {
+            return this.owners.map(function (account_public_key) {
+                return util_1.SHA256(account_public_key);
+            });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Block_pool.prototype.set_owners = function (owners) {
+        // focus on this set accessors
+        // ideally, pass in private keys for verification
+        this.owners = owners;
+    };
+    Block_pool.prototype.clear = function () {
         this.old_send = this.old_send.concat(this.new_send);
         var new_send = this.new_send;
         var new_receive = this.new_receive;
         this.new_send = this.new_receive = [];
-        return { new_send, new_receive };
-    }
-    add({ new_receive, new_send, addresses, network /* to find if network is strong or not */, }) {
+        return { new_send: new_send, new_receive: new_receive };
+    };
+    Block_pool.prototype.add = function (_a) {
+        var _this = this;
+        var new_receive = _a.new_receive, new_send = _a.new_send, addresses = _a.addresses;
         // first, preliminary checking
         // should we return true, or the block itself (in array.map function?)
         // filtering new_send and new_receive
@@ -51,7 +55,7 @@ class Block_pool {
         new_receive = new_receive ? new_receive : [];
         addresses = addresses ? addresses : [];
         new_send = new_send
-            .map((block) => {
+            .map(function (block) {
             if (
             /* block.public_key && */
             util_1.verify_block(block) &&
@@ -61,9 +65,9 @@ class Block_pool {
             else
                 return null;
         })
-            .filter((send) => send);
+            .filter(function (send) { return send; });
         new_receive = new_receive
-            .map((block) => {
+            .map(function (block) {
             if (block instanceof block_1.Block &&
                 util_1.verify_block(block) &&
                 block_1.Block.is_valid(block) &&
@@ -73,57 +77,63 @@ class Block_pool {
             else
                 return null;
         })
-            .filter((receive) => receive);
+            .filter(function (receive) { return receive; });
         // setting up listeners for corresponding receive_blocks
-        new_send.forEach((send) => {
+        new_send.forEach(function (send) {
             // switching on just the new send blocks will cover the old send blocks too
             if (!send)
                 return;
             if (send.type.is_no_reply)
                 return;
-            if (this.recycle_bin.find((hash) => hash === send.hash[0].substring(0, 20)))
+            if (_this.recycle_bin.find(function (hash) { return hash === send.hash[0].substring(0, 20); }))
                 return;
-            if (!this.event.listenerCount(send.hash[0].substring(0, 20))) {
+            if (!_this.event.listenerCount(send.hash[0].substring(0, 20))) {
                 // add quorum checking here. if false, return
-                this.new_send.push(send);
-                this.event.on(send.hash[0].substring(0, 20), (receive) => {
+                _this.new_send.push(send);
+                _this.event.on(send.hash[0].substring(0, 20), function (receive) {
                     if (!(receive.money + send.money)) {
-                        this.event.emit(receive.hash[0].substring(0, 20), true);
-                        this.recycle_bin.push(send.hash[0].substring(0, 20));
-                        this.new_send.splice(this.new_send.findIndex((block) => send.hash[0].substring(0, 20) ===
-                            block.hash[0].substring(0, 20)), 1);
+                        _this.event.emit(receive.hash[0].substring(0, 20), true);
+                        _this.recycle_bin.push(send.hash[0].substring(0, 20));
+                        _this.new_send.splice(_this.new_send.findIndex(function (block) {
+                            return send.hash[0].substring(0, 20) ===
+                                block.hash[0].substring(0, 20);
+                        }), 1);
                     }
                     else
-                        this.event.emit(receive.hash[0].substring(0, 20), false);
+                        _this.event.emit(receive.hash[0].substring(0, 20), false);
                 });
             }
         });
         // triggering the respective send blocks
-        new_receive.forEach((receive) => {
+        new_receive.forEach(function (receive) {
             if (!receive ||
-                this.new_receive.find((block) => block.hash[0].substring(0, 20) ==
-                    receive.hash[0].substring(0, 20)))
+                _this.new_receive.find(function (block) {
+                    return block.hash[0].substring(0, 20) ==
+                        receive.hash[0].substring(0, 20);
+                }))
                 return;
-            if (this.recycle_bin.find((hash) => hash === receive.hash[0].substring(0, 20)))
+            if (_this.recycle_bin.find(function (hash) { return hash === receive.hash[0].substring(0, 20); }))
                 return;
-            this.new_receive.push(receive);
-            this.event.once(receive.hash[0].substring(0, 20), (status) => {
-                this.recycle_bin.push(receive.hash[0].substring(0, 20));
+            _this.new_receive.push(receive);
+            _this.event.once(receive.hash[0].substring(0, 20), function (status) {
+                _this.recycle_bin.push(receive.hash[0].substring(0, 20));
                 if (!status) {
-                    this.new_receive.splice(this.new_receive.findIndex((block) => receive.hash[0].substring(0, 20) ===
-                        block.hash[0].substring(0, 20)), 1);
+                    _this.new_receive.splice(_this.new_receive.findIndex(function (block) {
+                        return receive.hash[0].substring(0, 20) ===
+                            block.hash[0].substring(0, 20);
+                    }), 1);
                 }
             });
-            this.event.emit(receive.hash[2].substring(0, 20), receive);
+            _this.event.emit(receive.hash[2].substring(0, 20), receive);
         });
-        new_receive.forEach((receive) => {
+        new_receive.forEach(function (receive) {
             // status describes if receive block matched the money or not
             // on so that atleast one 'true' response will validate it
             if (!receive)
                 return;
-            this.event.off(receive.hash[0].substring(0, 20), () => { });
+            _this.event.off(receive.hash[0].substring(0, 20), function () { });
         });
-        this.recycle_bin.forEach((hash) => this.event.off(hash, () => { }));
+        this.recycle_bin.forEach(function (hash) { return _this.event.off(hash, function () { }); });
         // remove both if both match, send the receive
         // remove just the receive if they dont match
         // add the pool to this.pool
@@ -133,30 +143,31 @@ class Block_pool {
         // // // 1. if that block's meant for you, take it in XD
         // // 2. sign on it (done after this, in the account/user part)
         // // 3. send it to others
-        let new_set = this.new_receive.concat(this.new_send);
-        new_set.sort((a, b) => a.timestamp - b.timestamp);
+        var new_set = this.new_receive.concat(this.new_send);
+        new_set.sort(function (a, b) { return a.timestamp - b.timestamp; });
+        // addresses manipulation
+        addresses = addresses.filter(function (blockchain) { return blockchain && blockchain.is_valid(); });
         this.addresses = this.addresses.concat(addresses);
-        this.addresses.sort((a, b) => a.timestamp - b.timestamp);
-        this.addresses = this.addresses.map((data) => {
-            let block = new_set.find((block // shouldnt this function be optimised?
-            ) => block.sender === data.public &&
-                block.timestamp > data.timestamp);
-            if (block && block.initial_balance === data.money) {
-                data.money += block.money;
-                data.timestamp = block.timestamp;
-                return data;
-            }
-            else
-                return data;
+        this.addresses.sort(function (a, b) { return b.latest_update - a.latest_update; });
+        // finding unique addresses and addresses that actually belongs to me
+        this.addresses = this.addresses.filter(function (blockchain, index, addresses) {
+            return (addresses.findIndex(function (item) { return item.identifier === blockchain.identifier; }) === index &&
+                !_this.identifier.find(function (id) { return id === blockchain.identifier; })); // unique blockchains, and nothing about the original owner
         });
-        // if an address has new timestamp
-    }
-    remove() { } // accepts an array of block hashes to remove
-    return_existing() { }
-    return_valid() { }
-    set_map() { }
-    clear_if_acepted() { }
-}
+        this.addresses = this.addresses.map(function (blockchain) {
+            var block = new_set.find(function (block) {
+                return block.identifier === blockchain.identifier &&
+                    block.hash[1] === blockchain.first.hash[0] &&
+                    block.timestamp > blockchain.latest_update &&
+                    block.money + blockchain.balance() > 0;
+            });
+            if (block)
+                blockchain.add_block(block);
+            return blockchain;
+        });
+    };
+    return Block_pool;
+}());
 exports.Block_pool = Block_pool;
 /* send block ->
  *

@@ -13,24 +13,13 @@ exports.Block = void 0;
  * 3. private data members ensures data security
  * 4. receiver is of type bignum
  */
-const util_1 = require("../util");
-const config_1 = require("./config");
-const config_2 = require("./config");
-const { LAST_HASH, SENDER_PUBLIC } = config_2.GENESIS_DATA;
-class Block {
-    _initial_balance;
-    _money;
-    _data;
-    _verifications;
-    _receiver;
-    _timestamp;
-    _public_key;
-    _nonce;
-    _hash;
-    _type;
-    _sender;
-    constructor({ initial_balance, money, data, receiver, last_hash, reference_hash, // for receive blocks to reference send blocks
-    public_key, sender, tags, }) {
+var util_1 = require("../util");
+var config_1 = require("./config");
+var LAST_HASH = config_1.GENESIS_DATA.LAST_HASH, SENDER_PUBLIC = config_1.GENESIS_DATA.SENDER_PUBLIC;
+var Block = /** @class */ (function () {
+    function Block(_a) {
+        var initial_balance = _a.initial_balance, money = _a.money, data = _a.data, receiver = _a.receiver, last_hash = _a.last_hash, reference_hash = _a.reference_hash, // for receive blocks to reference send blocks
+        public_key = _a.public_key, sender = _a.sender, tags = _a.tags;
         this._hash = ["", last_hash || null, reference_hash || null];
         this._data = [null, {}]; // object as 2nd part so that we can expand this
         this._type = new config_1.TYPE(tags, money, data);
@@ -48,54 +37,113 @@ class Block {
         this._hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
         this.mine();
     }
-    get verifications() {
-        return this._verifications;
-    }
-    get timestamp() {
-        return this._timestamp;
-    }
-    get public_key() {
-        return this._public_key;
-    }
-    get sender() {
-        return this._sender;
-    }
-    get type() {
-        return this._type;
-    }
-    get nonce() {
-        return this._nonce;
-    }
-    get hash() {
-        return this._hash;
-    }
-    get money() {
-        return this._money;
-    }
-    get initial_balance() {
-        return this._initial_balance;
-    }
-    get data() {
-        return this._data[0];
-    }
-    get modifiable_data() {
-        return this._data[1];
-    }
-    set modifiable_data(data) {
-        // how do you add data to the 2nd part?
-    }
-    get receiver() {
-        return this._receiver;
-    }
-    set receiver(value) {
-        this._receiver = value;
-    }
-    set add_verifications(verification) {
-        // add type checking
-        if (verification)
-            this._verifications.push(verification);
-    }
-    static is_valid(block) {
+    Object.defineProperty(Block.prototype, "identifier", {
+        get: function () {
+            return util_1.SHA256(this._sender);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "verifications", {
+        get: function () {
+            return this._verifications;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "timestamp", {
+        get: function () {
+            return this._timestamp;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "public_key", {
+        get: function () {
+            return this._public_key;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "sender", {
+        get: function () {
+            return this._sender;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "type", {
+        get: function () {
+            return this._type;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "nonce", {
+        get: function () {
+            return this._nonce;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "hash", {
+        get: function () {
+            return this._hash;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "money", {
+        get: function () {
+            return this._money;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "initial_balance", {
+        get: function () {
+            return this._initial_balance;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "data", {
+        get: function () {
+            return this._data[0];
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "modifiable_data", {
+        get: function () {
+            return this._data[1];
+        },
+        set: function (data) {
+            // how do you add data to the 2nd part?
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "receiver", {
+        get: function () {
+            return this._receiver;
+        },
+        set: function (value) {
+            this._receiver = value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Block.prototype, "add_verifications", {
+        set: function (verification) {
+            // add type checking
+            if (verification)
+                this._verifications.push(verification);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Block.is_valid = function (block) {
         // data-only blocks return true
         // if (!(block instanceof Block) || block.type.isspam) return false
         try {
@@ -126,7 +174,7 @@ class Block {
                 return false;
             // else if (!(block.money > 0) || !block.hash[2]) return false
             else {
-                const hash = util_1.SHA256(block.timestamp, block.hash[1], block.data, block.money, block.receiver, block.nonce, block.initial_balance);
+                var hash = util_1.SHA256(block.timestamp, block.hash[1], block.data, block.money, block.receiver, block.nonce, block.initial_balance);
                 return hash.substring(0, config_1.DIFFICULTY) === "0".repeat(config_1.DIFFICULTY);
             }
             // the block-pool will verify state changes...dont worry
@@ -134,17 +182,18 @@ class Block {
         catch (err) {
             return false;
         }
-    }
-    mine() {
+    };
+    Block.prototype.mine = function () {
         do {
             ++this._nonce;
             this._hash[0] = util_1.SHA256(this._timestamp, this._hash[1], this._data[0], this._money, this._receiver, this._nonce, this._initial_balance);
         } while (this._hash &&
             this._hash[0].substring(0, config_1.DIFFICULTY) !== "0".repeat(config_1.DIFFICULTY) &&
             this._money);
-    }
-    create_input() { }
-    create_output_map() { }
-    update() { }
-}
+    };
+    Block.prototype.create_input = function () { };
+    Block.prototype.create_output_map = function () { };
+    Block.prototype.update = function () { };
+    return Block;
+}());
 exports.Block = Block;

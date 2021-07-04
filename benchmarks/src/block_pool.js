@@ -6,8 +6,8 @@
  * 5. if an address is updated, send the update to others too
  */
 import EventEmitter from "events";
-import { verify_block } from "../util/index.js";
-import { Block } from "./block.js";
+import { verify_block } from "../util";
+import { Block } from "./block";
 export class Block_pool {
     old_send;
     new_send;
@@ -37,7 +37,7 @@ export class Block_pool {
         this.new_send = this.new_receive = [];
         return { new_send, new_receive };
     }
-    add({ new_receive, new_send, addresses, network /* to find if network is strong or not */, }) {
+    add({ new_receive, new_send, addresses, }) {
         // first, preliminary checking
         // should we return true, or the block itself (in array.map function?)
         // filtering new_send and new_receive
@@ -129,20 +129,29 @@ export class Block_pool {
         // // 3. send it to others
         let new_set = this.new_receive.concat(this.new_send);
         new_set.sort((a, b) => a.timestamp - b.timestamp);
+        // addresses manipulation
+        addresses = addresses.filter((blockchain) => blockchain && blockchain.is_valid());
         this.addresses = this.addresses.concat(addresses);
-        this.addresses.sort((a, b) => a.timestamp - b.timestamp);
-        this.addresses = this.addresses.map((data) => {
-            let block = new_set.find((block // shouldnt this function be optimised?
-            ) => block.sender === data.public &&
-                block.timestamp > data.timestamp);
-            if (block && block.initial_balance === data.money) {
-                data.money += block.money;
-                data.timestamp = block.timestamp;
-                return data;
-            }
-            else
-                return data;
-        });
+        // gotta find out redundant addresses
+        // ascending order of latest-ness
+        this.addresses.sort((a, b) => a.first.timestamp - b.first.timestamp);
+        /*
+ * The logic for verifying, redundancy checking and timestamp checking for addresses
+
+            this.addresses = this.addresses.map((chain: Blockchain) => {
+            let block = new_set.find(
+                (
+                    block: Block // shouldnt this function be optimised?
+                ) =>
+                    block.sender === chain.first.sender &&
+                    block.timestamp > chain.timestamp
+            );
+            if (block && block.initial_balance === chain.money) {
+                chain.money += block.money;
+                chain.timestamp = block.timestamp;
+                return chain;
+            } else return chain;
+        }); */
         // if an address has new timestamp
     }
     remove() { } // accepts an array of block hashes to remove

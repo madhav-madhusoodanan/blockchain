@@ -11,8 +11,7 @@
  * 4. receiver is of type bignum
  */
 import { SHA256 } from "../util"
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_enum} from "./config"
-import {  GENESIS_DATA } from "./config"
+import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_enum, GENESIS_DATA} from "./config"
 
 const {LAST_HASH, SENDER_PUBLIC} = GENESIS_DATA
 
@@ -81,7 +80,9 @@ export class Block {
         this.mine()
     }
 
-
+    public get identifier(): string {
+        return SHA256(this._sender)
+    }
     public get verifications(): string[] {
         return this._verifications
     }

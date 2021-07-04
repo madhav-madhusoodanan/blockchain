@@ -12,22 +12,22 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Comm = void 0;
-const socket_io_client_1 = require("socket.io-client");
-class Comm {
-    comm;
-    constructor(id) {
+var socket_io_client_1 = require("socket.io-client");
+var Comm = /** @class */ (function () {
+    function Comm(id) {
         this.comm = socket_io_client_1.io();
         // job of the server to handle the rooms
-        this.comm.emit("join", { id }, (error) => {
+        this.comm.emit("join", { id: id }, function (error) {
             if (error)
                 alert(error);
         });
     }
     // data_chunk must always be in object/json format
     // {new_send, new_receive, addresses, network}
-    send(data_chunk) {
+    Comm.prototype.send = function (data_chunk) {
         /* this.comm.emit("data", data_chunk); */
         return data_chunk; // for testing in amount.send
-    }
-}
+    };
+    return Comm;
+}());
 exports.Comm = Comm;

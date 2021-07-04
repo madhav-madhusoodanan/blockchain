@@ -14,87 +14,105 @@ exports.Account = void 0;
  * it gives the money to the account in the start
  * can generate money just like that
  */
-const block_1 = require("./block");
-const blockchain_1 = require("./blockchain");
-const block_pool_1 = require("./block_pool");
-const util_1 = require("../util");
-const config_1 = require("./config");
-class Account {
-    // declaration of private fields
-    _key_pair;
-    _base_balance;
-    blockchain;
-    standalone;
-    block_pool;
-    constructor({ blockchain, key_pair, private_key, standalone, }) {
-        this.blockchain = blockchain || new blockchain_1.Blockchain();
+var block_1 = require("./block");
+var blockchain_1 = require("./blockchain");
+var block_pool_1 = require("./block_pool");
+var util_1 = require("../util");
+var config_1 = require("./config");
+var Account = /** @class */ (function () {
+    function Account(_a) {
+        var blockchain = _a.blockchain, key_pair = _a.key_pair, private_key = _a.private_key, standalone = _a.standalone;
+        if (key_pair)
+            this._key_pair = key_pair;
+        else
+            this._key_pair = util_1.genKeyPair(private_key);
+        this.blockchain =
+            blockchain ||
+                new blockchain_1.Blockchain(this._key_pair.getPublic().encode("hex"));
+        // its okay even if private key is null
         if (standalone) {
             this.standalone = true;
-            this.block_pool = new block_pool_1.Block_pool();
+            this.block_pool = new block_pool_1.Block_pool([this._key_pair.getPublic().encode("hex")]);
         }
         else {
             this.standalone = false;
             this.block_pool = undefined;
         }
-        if (key_pair)
-            this._key_pair = key_pair;
-        else
-            this._key_pair = util_1.genKeyPair(private_key);
-        // its okay even if private key is null
         this._base_balance = 0; // will come in necessary when clearing blockchains
     }
-    get public_key() {
-        return this._key_pair.getPublic().encode("hex");
-    }
-    set balance(balance) {
-        balance === Infinity ? (this._base_balance = Infinity) : null;
-    }
-    // key is present only for debugging
-    get private_key() {
-        return this._key_pair.getPrivate("hex");
-    }
-    get balance() {
-        return this.blockchain.balance(this._base_balance);
-    }
-    get verify() {
-        return this.blockchain.is_valid();
-    }
-    get account_verify() {
-        let data = util_1.random();
-        return [this.public_key, data, this.sign(data)];
-    }
-    create_block({ money, data, reference_hash, receiver_address, tags, }) {
+    Object.defineProperty(Account.prototype, "public_key", {
+        get: function () {
+            return this._key_pair.getPublic().encode("hex");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Account.prototype, "balance", {
+        get: function () {
+            return this.blockchain.balance(this._base_balance);
+        },
+        set: function (balance) {
+            balance === Infinity ? (this._base_balance = Infinity) : null;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Account.prototype, "private_key", {
+        // key is present only for debugging
+        get: function () {
+            return this._key_pair.getPrivate("hex");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Account.prototype, "verify", {
+        get: function () {
+            return this.blockchain.is_valid();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Account.prototype, "account_verify", {
+        get: function () {
+            var data = util_1.random();
+            return [this.public_key, data, this.sign(data)];
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Account.prototype.create_block = function (_a) {
+        var money = _a.money, data = _a.data, reference_hash = _a.reference_hash, receiver_address = _a.receiver_address, tags = _a.tags;
         // receiver_address is an array of public keys
         // keep tight block validity checking here
         // create a one-time receiver_address and signatures too
         // money is already negative if it is a send block
-        let block;
-        let last_hash = this.blockchain.first()
-            ? this.blockchain.first().hash[0]
+        var block;
+        var last_hash = this.blockchain.first
+            ? this.blockchain.first.hash[0]
             : config_1.GENESIS_DATA.LAST_HASH;
         if (!(receiver_address instanceof Array))
             return null;
-        let initial_balance = this.balance || 0;
+        var initial_balance = this.balance || 0;
         if (receiver_address.length === 2) {
             // send block
             // create a receiver and public_key from receiver_address
-            let random_key = util_1.genKeyPair(); // R = rG
+            var random_key = util_1.genKeyPair(); // R = rG
             // verify and optimize the steps below
-            let r = random_key.getPrivate();
+            var r = random_key.getPrivate();
             // make the below more efficient)
-            let A = util_1.genPublic(receiver_address[0]);
-            let B = util_1.genPublic(receiver_address[1]);
-            let random_key_2 = util_1.genKeyPair(util_1.SHA256(A.mul(r).encode("hex")));
+            var A = util_1.genPublic(receiver_address[0]);
+            var B = util_1.genPublic(receiver_address[1]);
+            var random_key_2 = util_1.genKeyPair(util_1.SHA256(A.mul(r).encode("hex")));
             A = r = null;
-            let receiver = B.add(random_key_2.getPublic()); // receiver is of type point
+            var receiver = B.add(random_key_2.getPublic()); // receiver is of type point
             B = null;
             block = new block_1.Block({
-                initial_balance,
-                money,
-                data,
+                initial_balance: initial_balance,
+                money: money,
+                data: data,
                 receiver: receiver.encode("hex"),
-                reference_hash,
-                last_hash,
+                reference_hash: reference_hash,
+                last_hash: last_hash,
                 public_key: random_key.getPublic().encode("hex"),
                 sender: this._key_pair.getPublic().encode("hex"),
                 tags: tags,
@@ -103,15 +121,15 @@ class Account {
         else if (receiver_address.length === 1) {
             // receive block
             block = new block_1.Block({
-                initial_balance,
-                money,
+                initial_balance: initial_balance,
+                money: money,
                 data: data || "receive",
                 receiver: receiver_address[0],
-                reference_hash,
-                last_hash,
+                reference_hash: reference_hash,
+                last_hash: last_hash,
                 public_key: null,
                 sender: this._key_pair.getPublic().encode("hex"),
-                tags,
+                tags: tags,
             });
         }
         else
@@ -119,26 +137,28 @@ class Account {
         block.add_verifications = this.sign(block.hash[0]);
         this.blockchain.add_block(block);
         return block;
-    }
-    sign(data_chunk) {
+    };
+    Account.prototype.sign = function (data_chunk) {
         // // add rng signatures only if block is a send block
         // else make just a normal signature
         return this._key_pair.sign(data_chunk).toDER("hex");
-    }
-    send_large_data({ data, receiver_address, tags, }) {
+    };
+    Account.prototype.send_large_data = function (_a) {
+        var data = _a.data, receiver_address = _a.receiver_address, tags = _a.tags;
         // break the data into smaller chunks to
-        let data_chunk;
-        const arr = [];
+        var data_chunk;
+        var arr = [];
         while (data_chunk)
             arr.push(this.send({
                 money: 0,
                 data: data_chunk,
-                receiver_address,
+                receiver_address: receiver_address,
                 tags: [config_1.TYPE_enum.speed].concat(tags),
             }));
         return arr;
-    }
-    send({ money, data, receiver_address, tags /* only for independent types */, }) {
+    };
+    Account.prototype.send = function (_a) {
+        var money = _a.money, data = _a.data, receiver_address = _a.receiver_address, tags = _a.tags /* only for independent types */;
         if (
         // guard clauses
         !this.standalone &&
@@ -150,11 +170,11 @@ class Account {
             if (money < 0 || money === Infinity)
                 money = 0;
             else if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
-                const block = this.create_block({
+                var block = this.create_block({
                     money: 0,
-                    data,
-                    receiver_address,
-                    tags,
+                    data: data,
+                    receiver_address: receiver_address,
+                    tags: tags,
                 });
                 if (block_1.Block.is_valid(block) && util_1.verify_block(block))
                     return block;
@@ -163,14 +183,14 @@ class Account {
                 // no problem if money is negative or Infinity then (above)
                 // what if money is null?
                 // then the 1st part of "while" condition is false (below)
-                const balance = this.balance;
+                var balance = this.balance;
                 if (balance === Infinity)
                     return null;
-                const block = this.create_block({
+                var block = this.create_block({
                     money: money > balance ? -1 * balance : -1 * money,
-                    data,
-                    receiver_address,
-                    tags,
+                    data: data,
+                    receiver_address: receiver_address,
+                    tags: tags,
                 });
                 if (block_1.Block.is_valid(block) && util_1.verify_block(block)) {
                     money += block.money;
@@ -191,15 +211,16 @@ class Account {
             console.error(error);
             return false;
         }
-    }
-    receive(receives) {
+    };
+    Account.prototype.receive = function (receives) {
+        var _this = this;
         if (!this.standalone)
             return undefined;
         receives = receives
-            .map((block) => {
+            .map(function (block) {
             if (!(block instanceof block_1.Block))
                 return;
-            const new_block = this.create_block({
+            var new_block = _this.create_block({
                 data: block.data,
                 money: -1 * block.money,
                 reference_hash: block.hash[0],
@@ -211,10 +232,10 @@ class Account {
             else
                 return;
         })
-            .filter((block) => block);
+            .filter(function (block) { return block; });
         return receives;
-    }
-    update_pool(data) {
+    };
+    Account.prototype.update_pool = function (data) {
         if (!this.standalone)
             return false;
         try {
@@ -226,38 +247,40 @@ class Account {
             console.error(error);
             return false;
         }
-    }
-    scan() {
+    };
+    Account.prototype.scan = function () {
+        var _this = this;
         if (!this.standalone)
             return null;
-        let receives = this.block_pool.new_send.filter((block) => 
-        // find a way to store the private key within the block
-        this.is_for_me(block) && block.money <= 0);
+        var receives = this.block_pool.new_send.filter(function (block) {
+            // find a way to store the private key within the block
+            return _this.is_for_me(block) && block.money <= 0;
+        });
         this.block_pool.add({
             new_receive: this.receive(receives),
         });
-        const new_blocks = this.block_pool.clear();
+        var new_blocks = this.block_pool.clear();
         new_blocks.new_send = new_blocks.new_send
-            .map((block) => {
+            .map(function (block) {
             if (!block)
                 return;
-            block.add_verifications = this.sign(block.hash[0]);
+            block.add_verifications = _this.sign(block.hash[0]);
             return block;
         })
-            .filter((send) => send);
+            .filter(function (send) { return send; });
         new_blocks.new_receive = new_blocks.new_receive
-            .map((block) => {
+            .map(function (block) {
             if (!block)
                 return;
-            if (this.is_for_me(block))
+            if (_this.is_for_me(block))
                 return block;
-            block.add_verifications = this.sign(block.hash[0]);
+            block.add_verifications = _this.sign(block.hash[0]);
             return block;
         })
-            .filter((receive) => receive);
+            .filter(function (receive) { return receive; });
         return new_blocks;
-    }
-    is_for_me(block) {
+    };
+    Account.prototype.is_for_me = function (block) {
         if (!this.standalone)
             return false;
         if (this.public_key === block.receiver)
@@ -266,7 +289,8 @@ class Account {
             return true;
         else
             return false;
-    }
-    clean() { }
-}
+    };
+    Account.prototype.clean = function () { };
+    return Account;
+}());
 exports.Account = Account;

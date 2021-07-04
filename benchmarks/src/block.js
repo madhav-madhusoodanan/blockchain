@@ -10,9 +10,9 @@
  * 3. private data members ensures data security
  * 4. receiver is of type bignum
  */
-import { SHA256 } from "../util/index.js";
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "./config.js";
-import { GENESIS_DATA } from "./config.js";
+import { SHA256 } from "../util";
+import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "./config";
+import { GENESIS_DATA } from "./config";
 const { LAST_HASH, SENDER_PUBLIC } = GENESIS_DATA;
 export class Block {
     _initial_balance;
