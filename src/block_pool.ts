@@ -51,7 +51,7 @@ export class Block_pool {
         var new_send = this.new_send;
         var new_receive = this.new_receive;
         this.new_send = this.new_receive = [];
-        return { new_send, new_receive };
+        return { new_send, new_receive, addresses: this.addresses };
     }
     add({
         new_receive,
@@ -183,11 +183,12 @@ export class Block_pool {
         new_set.sort((a, b) => a.timestamp - b.timestamp);
 
         // addresses manipulation
-        addresses = addresses.filter(
-            (blockchain) => blockchain && blockchain.is_valid()
-        );
+
         this.addresses = this.addresses.concat(addresses);
-        this.addresses.sort((a, b) => b.latest_update - a.latest_update);
+        this.addresses = this.addresses.filter(
+            (blockchain) => blockchain && blockchain.is_valid
+        );
+        this.addresses.sort((a, b) => b.timestamp - a.timestamp);
 
         // finding unique addresses and addresses that actually belongs to me
         this.addresses = this.addresses.filter(
@@ -201,15 +202,20 @@ export class Block_pool {
             }
         );
 
+        let block;
         this.addresses = this.addresses.map((blockchain) => {
-            const block = new_set.find(
+            block = new_set.find(
                 (block) =>
-                    block.identifier === blockchain.identifier &&
-                    block.hash[1] === blockchain.first.hash[0] &&
-                    block.timestamp > blockchain.latest_update &&
-                    block.money + blockchain.balance() > 0
+                    block.sender === blockchain.identifier &&
+                    block.money + blockchain.balance() > 0 &&
+                    (blockchain.length === 0 ||
+                        block.hash[1] === blockchain.first.hash[0]) &&
+                    block.timestamp > blockchain.timestamp
             );
-            if (block) blockchain.add_block(block);
+            if (block) {
+                console.log("dude");
+                blockchain.add_block(block);
+            }
             return blockchain;
         });
     }

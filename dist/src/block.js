@@ -37,13 +37,6 @@ var Block = /** @class */ (function () {
         this._hash[2] = reference_hash || null; // hash of the send block, this block is its receive block
         this.mine();
     }
-    Object.defineProperty(Block.prototype, "identifier", {
-        get: function () {
-            return util_1.SHA256(this._sender);
-        },
-        enumerable: false,
-        configurable: true
-    });
     Object.defineProperty(Block.prototype, "verifications", {
         get: function () {
             return this._verifications;

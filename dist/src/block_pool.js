@@ -43,7 +43,7 @@ var Block_pool = /** @class */ (function () {
         var new_send = this.new_send;
         var new_receive = this.new_receive;
         this.new_send = this.new_receive = [];
-        return { new_send: new_send, new_receive: new_receive };
+        return { new_send: new_send, new_receive: new_receive, addresses: this.addresses };
     };
     Block_pool.prototype.add = function (_a) {
         var _this = this;
@@ -146,23 +146,27 @@ var Block_pool = /** @class */ (function () {
         var new_set = this.new_receive.concat(this.new_send);
         new_set.sort(function (a, b) { return a.timestamp - b.timestamp; });
         // addresses manipulation
-        addresses = addresses.filter(function (blockchain) { return blockchain && blockchain.is_valid(); });
         this.addresses = this.addresses.concat(addresses);
-        this.addresses.sort(function (a, b) { return b.latest_update - a.latest_update; });
+        this.addresses = this.addresses.filter(function (blockchain) { return blockchain && blockchain.is_valid; });
+        this.addresses.sort(function (a, b) { return b.timestamp - a.timestamp; });
         // finding unique addresses and addresses that actually belongs to me
         this.addresses = this.addresses.filter(function (blockchain, index, addresses) {
             return (addresses.findIndex(function (item) { return item.identifier === blockchain.identifier; }) === index &&
                 !_this.identifier.find(function (id) { return id === blockchain.identifier; })); // unique blockchains, and nothing about the original owner
         });
+        var block;
         this.addresses = this.addresses.map(function (blockchain) {
-            var block = new_set.find(function (block) {
-                return block.identifier === blockchain.identifier &&
-                    block.hash[1] === blockchain.first.hash[0] &&
-                    block.timestamp > blockchain.latest_update &&
-                    block.money + blockchain.balance() > 0;
+            block = new_set.find(function (block) {
+                return block.sender === blockchain.identifier &&
+                    block.money + blockchain.balance() > 0 &&
+                    (blockchain.length === 0 ||
+                        block.hash[1] === blockchain.first.hash[0]) &&
+                    block.timestamp > blockchain.timestamp;
             });
-            if (block)
+            if (block) {
+                console.log("dude");
                 blockchain.add_block(block);
+            }
             return blockchain;
         });
     };

@@ -69,7 +69,7 @@ export class Account {
         return this.blockchain.balance(this._base_balance);
     }
     public get verify() {
-        return this.blockchain.is_valid();
+        return this.blockchain.is_valid;
     }
     public get account_verify() {
         let data = random();

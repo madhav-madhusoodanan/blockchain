@@ -10,9 +10,8 @@
  * 3. private data members ensures data security
  * 4. receiver is of type bignum
  */
-import { SHA256 } from "../util";
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "./config";
-import { GENESIS_DATA } from "./config";
+import { SHA256 } from "../util/index.js";
+import { DIFFICULTY, BET_KEEPING_KEY, TYPE, GENESIS_DATA } from "./config.js";
 const { LAST_HASH, SENDER_PUBLIC } = GENESIS_DATA;
 export class Block {
     _initial_balance;
@@ -26,8 +25,17 @@ export class Block {
     _hash;
     _type;
     _sender;
-    constructor({ initial_balance, money, data, receiver, last_hash, reference_hash, // for receive blocks to reference send blocks
-    public_key, sender, tags, }) {
+    constructor({
+        initial_balance,
+        money,
+        data,
+        receiver,
+        last_hash,
+        reference_hash, // for receive blocks to reference send blocks
+        public_key,
+        sender,
+        tags,
+    }) {
         this._hash = ["", last_hash || null, reference_hash || null];
         this._data = [null, {}]; // object as 2nd part so that we can expand this
         this._type = new TYPE(tags, money, data);
@@ -89,58 +97,71 @@ export class Block {
     }
     set add_verifications(verification) {
         // add type checking
-        if (verification)
-            this._verifications.push(verification);
+        if (verification) this._verifications.push(verification);
     }
     static is_valid(block) {
         // data-only blocks return true
         // if (!(block instanceof Block) || block.type.isspam) return false
         try {
-            if (!block)
-                return false;
+            if (!block) return false;
             if (!block._receiver) {
                 block._receiver = BET_KEEPING_KEY;
-            }
-            else if (!block._money) {
+            } else if (!block._money) {
                 return true;
             }
             if (
-            /* condition:
-             * if not SENDERPUBLIC but negative total, then condition is true
-             * rest all conditons, false
-             *  */
-            block._money + block._initial_balance < 0 &&
-                block._sender !== SENDER_PUBLIC) {
+                /* condition:
+                 * if not SENDERPUBLIC but negative total, then condition is true
+                 * rest all conditons, false
+                 *  */
+                block._money + block._initial_balance < 0 &&
+                block._sender !== SENDER_PUBLIC
+            ) {
                 return false;
             }
             // A block is valid if a nonce exists
             // Not valid if money is Infinity
-            if (!block._nonce || block._money === Infinity)
-                return false;
+            if (!block._nonce || block._money === Infinity) return false;
             // hashes exist
             // 2. hash is verified
-            if (!block._hash[0] || !block._hash[1])
-                return false;
+            if (!block._hash[0] || !block._hash[1]) return false;
             // else if (!(block.money > 0) || !block.hash[2]) return false
             else {
-                const hash = SHA256(block.timestamp, block.hash[1], block.data, block.money, block.receiver, block.nonce, block.initial_balance);
+                const hash = SHA256(
+                    block.timestamp,
+                    block.hash[1],
+                    block.data,
+                    block.money,
+                    block.receiver,
+                    block.nonce,
+                    block.initial_balance
+                );
                 return hash.substring(0, DIFFICULTY) === "0".repeat(DIFFICULTY);
             }
             // the block-pool will verify state changes...dont worry
-        }
-        catch (err) {
+        } catch (err) {
             return false;
         }
     }
     mine() {
         do {
             ++this._nonce;
-            this._hash[0] = SHA256(this._timestamp, this._hash[1], this._data[0], this._money, this._receiver, this._nonce, this._initial_balance);
-        } while (this._hash &&
+            this._hash[0] = SHA256(
+                this._timestamp,
+                this._hash[1],
+                this._data[0],
+                this._money,
+                this._receiver,
+                this._nonce,
+                this._initial_balance
+            );
+        } while (
+            this._hash &&
             this._hash[0].substring(0, DIFFICULTY) !== "0".repeat(DIFFICULTY) &&
-            this._money);
+            this._money
+        );
     }
-    create_input() { }
-    create_output_map() { }
-    update() { }
+    create_input() {}
+    create_output_map() {}
+    update() {}
 }

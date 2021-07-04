@@ -67,7 +67,7 @@ var Account = /** @class */ (function () {
     });
     Object.defineProperty(Account.prototype, "verify", {
         get: function () {
-            return this.blockchain.is_valid();
+            return this.blockchain.is_valid;
         },
         enumerable: false,
         configurable: true

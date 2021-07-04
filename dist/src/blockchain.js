@@ -20,6 +20,7 @@ var Blockchain = /** @class */ (function () {
         this.chain = [];
         this.owner = owner;
         this.base_balance = 0;
+        this.update = Date.now();
     }
     Object.defineProperty(Blockchain.prototype, "length", {
         // set chain(chain) {
@@ -34,7 +35,7 @@ var Blockchain = /** @class */ (function () {
     });
     Object.defineProperty(Blockchain.prototype, "identifier", {
         get: function () {
-            return util_1.SHA256(this.owner);
+            return this.owner;
         },
         enumerable: false,
         configurable: true
@@ -47,6 +48,7 @@ var Blockchain = /** @class */ (function () {
             util_1.verify_block(block) &&
             (block.sender === this.owner || block.receiver === this.owner)) {
             this.chain = [block].concat(this.chain);
+            this.update = block.timestamp;
             // adds blocks to the start
             return true;
         }
@@ -60,11 +62,11 @@ var Blockchain = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Object.defineProperty(Blockchain.prototype, "latest_update", {
+    Object.defineProperty(Blockchain.prototype, "timestamp", {
         get: function () {
             try {
                 this.sort();
-                return this.first.timestamp;
+                return this.update;
             }
             catch (_a) {
                 return 0;
@@ -80,30 +82,34 @@ var Blockchain = /** @class */ (function () {
             return initial_balance || 0;
         return this.chain.reduce(function (prev_total, curr) { return prev_total + curr.money; }, initial_balance || 0);
     };
-    Blockchain.prototype.is_valid = function () {
-        var _this = this;
-        try {
-            return (this.balance(0) ===
-                this.first.initial_balance + this.first.money &&
-                this.chain.map(function (block) {
-                    if (_this.owner === block.sender ||
-                        _this.owner === block.receiver) {
-                        return true;
-                    }
-                    else
-                        throw new Error("multiple personality syndrome :(");
-                }) &&
-                true);
-        }
-        catch (error) {
-            return false;
-        }
-    };
+    Object.defineProperty(Blockchain.prototype, "is_valid", {
+        get: function () {
+            var _this = this;
+            try {
+                return (this.chain.length === 0 ||
+                    (this.balance(0) ===
+                        this.first.initial_balance + this.first.money &&
+                        this.chain.map(function (block) {
+                            if (_this.owner === block.sender ||
+                                _this.owner === block.receiver) {
+                                return true;
+                            }
+                            else
+                                throw new Error("multiple personality syndrome :(");
+                        }) &&
+                        true));
+            }
+            catch (error) {
+                return false;
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
     Blockchain.prototype.sort = function () {
         this.chain.sort(function (a, b) { return b.timestamp - a.timestamp; });
     };
-    Blockchain.prototype.prune = function () {
-    };
+    Blockchain.prototype.prune = function () { };
     return Blockchain;
 }());
 exports.Blockchain = Blockchain;

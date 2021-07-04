@@ -6,8 +6,8 @@
  * 5. if an address is updated, send the update to others too
  */
 import EventEmitter from "events";
-import { verify_block } from "../util";
-import { Block } from "./block";
+import { SHA256, verify_block } from "../util/index.js";
+import { Block } from "./block.js";
 export class Block_pool {
     old_send;
     new_send;
@@ -15,27 +15,30 @@ export class Block_pool {
     addresses;
     event;
     recycle_bin;
-    constructor() {
+    owners;
+    constructor(owners) {
         this.old_send = [];
         this.new_send = [];
         this.new_receive = [];
         this.addresses = [];
         this.event = new EventEmitter();
         this.recycle_bin = [];
+        this.owners = owners || [];
     }
-    // addresses = [{public, money, timestamp, last_block}, {}] type
-    // set addresses(addresses) {
-    //   // addresses are not supposed to be erased
-    //   // find a way to update addresses or add new ones
-    //    if(addresses instanceof Array) this.addresses.concat(addresses);
-    //    else if(addresses instanceof Object) this.addresses.append(addresses);
-    // }
+    get identifier() {
+        return this.owners.map((account_public_key) => SHA256(account_public_key));
+    }
+    set_owners(owners) {
+        // focus on this set accessors
+        // ideally, pass in private keys for verification
+        this.owners = owners;
+    }
     clear() {
         this.old_send = this.old_send.concat(this.new_send);
         var new_send = this.new_send;
         var new_receive = this.new_receive;
         this.new_send = this.new_receive = [];
-        return { new_send, new_receive };
+        return { new_send, new_receive, addresses: this.addresses };
     }
     add({ new_receive, new_send, addresses, }) {
         // first, preliminary checking
@@ -130,35 +133,28 @@ export class Block_pool {
         let new_set = this.new_receive.concat(this.new_send);
         new_set.sort((a, b) => a.timestamp - b.timestamp);
         // addresses manipulation
-        addresses = addresses.filter((blockchain) => blockchain && blockchain.is_valid());
         this.addresses = this.addresses.concat(addresses);
-        // gotta find out redundant addresses
-        // ascending order of latest-ness
-        this.addresses.sort((a, b) => a.first.timestamp - b.first.timestamp);
-        /*
- * The logic for verifying, redundancy checking and timestamp checking for addresses
-
-            this.addresses = this.addresses.map((chain: Blockchain) => {
-            let block = new_set.find(
-                (
-                    block: Block // shouldnt this function be optimised?
-                ) =>
-                    block.sender === chain.first.sender &&
-                    block.timestamp > chain.timestamp
-            );
-            if (block && block.initial_balance === chain.money) {
-                chain.money += block.money;
-                chain.timestamp = block.timestamp;
-                return chain;
-            } else return chain;
-        }); */
-        // if an address has new timestamp
+        this.addresses = this.addresses.filter((blockchain) => blockchain && blockchain.is_valid);
+        this.addresses.sort((a, b) => b.timestamp - a.timestamp);
+        // finding unique addresses and addresses that actually belongs to me
+        this.addresses = this.addresses.filter((blockchain, index, addresses) => {
+            return (addresses.findIndex((item) => item.identifier === blockchain.identifier) === index &&
+                !this.identifier.find((id) => id === blockchain.identifier)); // unique blockchains, and nothing about the original owner
+        });
+        let block;
+        this.addresses = this.addresses.map((blockchain) => {
+            block = new_set.find((block) => block.sender === blockchain.identifier &&
+                block.money + blockchain.balance() > 0 &&
+                (blockchain.length === 0 ||
+                    block.hash[1] === blockchain.first.hash[0]) &&
+                block.timestamp > blockchain.timestamp);
+            if (block) {
+                console.log("dude");
+                blockchain.add_block(block);
+            }
+            return blockchain;
+        });
     }
-    remove() { } // accepts an array of block hashes to remove
-    return_existing() { }
-    return_valid() { }
-    set_map() { }
-    clear_if_acepted() { }
 }
 /* send block ->
  *

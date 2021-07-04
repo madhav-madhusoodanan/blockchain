@@ -1,7 +1,7 @@
 {
     "time is in (dont edit this)": "milliseconds",
-    "genesis account makes a send block": [70, 50, 52],
-    "the receiver updates his account": [62, 43, 35],
-    "the account makes a send block to a 3rd account": [43, 34, 30],
-    "the 3rd account is updated": [35, 37, 29]
+    "genesis account makes a send block": [70, 50, 52, 34, 29, 37],
+    "the receiver updates his account": [62, 43, 35, 47, 49, 52],
+    "the account makes a send block to a 3rd account": [43, 34, 30, 40, 55, 39],
+    "the 3rd account is updated": [35, 37, 29, 36, 30, 28]
 }

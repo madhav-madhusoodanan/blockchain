@@ -30,12 +30,12 @@
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-import { Block } from "./block";
-import { Block_pool } from "./block_pool";
-import { Account } from "./account";
-import { Comm } from "./comm";
-import { TYPE_enum } from "./config";
-import { SHA256, genKeyPair, genPublic, verify_block } from "../util";
+import { Block } from "./block.js";
+import { Block_pool } from "./block_pool.js";
+import { Account } from "./account.js";
+import { Comm } from "./comm.js";
+import { TYPE_enum } from "./config.js";
+import { SHA256, genKeyPair, genPublic, verify_block } from "../util/index.js";
 export class User {
     // declaration of private fields
     _key_pair;
@@ -178,6 +178,7 @@ export class User {
                 });
                 if (new_block) {
                     this._accounts.push(account);
+                    this.block_pool.set_owners(this._accounts.map(account => account.public_key));
                     return { block: new_block, private_key };
                 }
                 else

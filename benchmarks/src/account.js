@@ -11,11 +11,11 @@
  * it gives the money to the account in the start
  * can generate money just like that
  */
-import { Block } from "./block";
-import { Blockchain } from "./blockchain";
-import { Block_pool } from "./block_pool";
-import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util";
-import { TYPE_enum, GENESIS_DATA } from "./config";
+import { Block } from "./block.js";
+import { Blockchain } from "./blockchain.js";
+import { Block_pool } from "./block_pool.js";
+import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util/index.js";
+import { TYPE_enum, GENESIS_DATA } from "./config.js";
 export class Account {
     // declaration of private fields
     _key_pair;
@@ -24,14 +24,6 @@ export class Account {
     standalone;
     block_pool;
     constructor({ blockchain, key_pair, private_key, standalone, }) {
-        if (standalone) {
-            this.standalone = true;
-            this.block_pool = new Block_pool();
-        }
-        else {
-            this.standalone = false;
-            this.block_pool = undefined;
-        }
         if (key_pair)
             this._key_pair = key_pair;
         else
@@ -40,6 +32,14 @@ export class Account {
             blockchain ||
                 new Blockchain(this._key_pair.getPublic().encode("hex"));
         // its okay even if private key is null
+        if (standalone) {
+            this.standalone = true;
+            this.block_pool = new Block_pool([this._key_pair.getPublic().encode("hex")]);
+        }
+        else {
+            this.standalone = false;
+            this.block_pool = undefined;
+        }
         this._base_balance = 0; // will come in necessary when clearing blockchains
     }
     get public_key() {
@@ -56,7 +56,7 @@ export class Account {
         return this.blockchain.balance(this._base_balance);
     }
     get verify() {
-        return this.blockchain.is_valid();
+        return this.blockchain.is_valid;
     }
     get account_verify() {
         let data = random();
