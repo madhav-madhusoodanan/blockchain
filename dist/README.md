@@ -1,8 +1,10 @@
 # Scripting Language basics
-Data that is stored on the blockchain can be divided into 2 types: State variables and Path variables<br /><br />
+Data that is stored on the blockchain can be divided into 4 types: Path independent/dependent variables and history independent/dependent variables <br /><br />
 
-State variables are commutative on the path taken to achieve its current state (ie, the order of changes does not matter, but the ways can be controlled)<br />
-Path variables are NOT commutative (ie, the order of changes DO matter and they are visible)
+Path independent variables are commutative on the path taken to achieve its current state (ie, the order of changes does not matter, but the ways can be controlled)<br />
+Path dependant variables are NOT commutative (ie, the order of changes DO matter and they are visible)<br />
+History dependent variables need a history for its existence and relevance<br />
+History independent variables dont.<br /><br />
 
 The advantage of providing a scripting language with such features is storage management.<br/>
 State variable history can be aggressively culled <br />
