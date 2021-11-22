@@ -1,5 +1,5 @@
 # Blockchain
-This is a DAG blockchain client library ( inspired by [Nano](https://content.nano.org/whitepaper/Nano_Whitepaper_en.pdf) ) that implements untraceability ( inspired by Monero's [research](https://github.com/monero-project/research-lab/blob/master/whitepaper/whitepaper.pdf) ).<br />
+This is a DAG blockchain client library ( inspired by Nano [blockchain](https://content.nano.org/whitepaper/Nano_Whitepaper_en.pdf) ) that implements untraceability ( inspired by Monero blockchain's [research](https://github.com/monero-project/research-lab/blob/master/whitepaper/whitepaper.pdf) ).<br />
 
 Navigate to the [docs](https://github.com/madhav-madhusoodanan/blockchain/tree/main/docs) folder for more details
 
