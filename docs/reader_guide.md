@@ -9,8 +9,8 @@ transaction_pool.js outlines how a transaction will be handled during its lifeti
 The lifetime is defined as the period from its send process to its receive process.
 
 The signature ensures that things are cryptographically secured.
-Ring signatures and receiver data are made only for send blocks.
-also, send blocks are made in such a way that the identity of the sender is irrelevant :(
+Untraceability singatures and receiver data are made only for send blocks.
+also, send blocks are made in such a way that the sender remains anonymous :)
 
 The blockchain is what keeps track of the user's activity.
 The blocks are arranged chronologically, with newest blocks first.
@@ -23,13 +23,13 @@ once the balance hit zero, they may safely delete the addresses.
 
 
 # Possible Feature(s):
-1. Plead to change a specific detail, and changes occur if proof exists, within some time
+1. Plead to change a specific detail, and changes occur if proof exists, within some time<br />
     Like, a block that was accidentally wronged
 
 
 # Functionality
-The User does all the tasks
-All the other objects just allow the user to do its job faster
+The User does all the tasks (like making blocks, signing, detecting blocks etc) <br />
+All the other classes just provide the user with functionality.
 
 # Checks for basic blockchain completeness
 1. Create a send block
