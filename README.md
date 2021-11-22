@@ -1,6 +1,29 @@
 # Blockchain
 This is a DAG blockchain client library ( inspired by Nano [blockchain](https://content.nano.org/whitepaper/Nano_Whitepaper_en.pdf) ) that implements untraceability ( inspired by Monero blockchain's [research](https://github.com/monero-project/research-lab/blob/master/whitepaper/whitepaper.pdf) ).<br />
 
+# Guide
+Start with **user.ts**. on folder **src/**
+Its is where all the classes' code come together.
+
+Then move to **block.ts**.
+its the medium of communication between users.
+
+**block_pool.ts** outlines how a transaction will be handled during its lifetime.
+The lifetime is defined as the period from its send process to its receive process.
+
+The signature ensures that blocks are cryptographically secured.
+Untraceability singatures and receiver data are made only for send blocks. <br />
+Also, send blocks are made in such a way that the sender remains anonymous :)
+
+The **blockchain.ts** file outlines how the user's activity is kept track of.
+The blocks are arranged chronologically, with newest blocks first.
+Users are required to maintain it (atleast the hashes of the blocks).
+Users can delete it after they are verified.
+
+Users can also (optionally) store a list of peer addresses, their timestamp and balance.
+Any user with that sender address can verify by signing on the block.
+once the balance hit zero, they may safely delete the addresses.
+
 Navigate to the [docs](https://github.com/madhav-madhusoodanan/blockchain/tree/main/docs) folder for more details
 
 # File structure
