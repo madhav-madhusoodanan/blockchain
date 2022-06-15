@@ -8,7 +8,7 @@
         "benchmark": "node benchmarks/local.transaction.js"
     },
     "dependencies": {
-        "bn.js": "^5.2.0",
+        "bn.js": "^5.2.1",
         "elliptic": "^6.5.4",
         "socket.io-client": "^4.1.2"
     },
