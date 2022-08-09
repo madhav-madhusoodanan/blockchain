@@ -6,8 +6,8 @@
  * 5. if an address is updated, send the update to others too
  */
 import EventEmitter from "events";
-import { verify_block } from "../util/index.js";
-import { Block } from "./block.js";
+import { verify_block } from "../util";
+import { Block } from "./block";
 export class Block_pool {
     old_send;
     new_send;
@@ -72,8 +72,6 @@ export class Block_pool {
         new_send.forEach((send) => {
             // switching on just the new send blocks will cover the old send blocks too
             if (!send)
-                return;
-            if (send.type.is_no_reply)
                 return;
             if (this.recycle_bin.find((hash) => hash === send.hash[0].substring(0, 20)))
                 return;

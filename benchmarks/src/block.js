@@ -10,9 +10,9 @@
  * 3. private data members ensures data security
  * 4. receiver is of type bignum
  */
-import { SHA256 } from "../util/index.js";
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE } from "./config.js";
-import { GENESIS_DATA } from "./config.js";
+import { SHA256 } from "../util";
+import { DIFFICULTY, BET_KEEPING_KEY } from "./config";
+import { GENESIS_DATA } from "./config";
 const { LAST_HASH, SENDER_PUBLIC } = GENESIS_DATA;
 export class Block {
     _initial_balance;
@@ -24,13 +24,11 @@ export class Block {
     _public_key;
     _nonce;
     _hash;
-    _type;
     _sender;
     constructor({ initial_balance, money, data, receiver, last_hash, reference_hash, // for receive blocks to reference send blocks
-    public_key, sender, tags, }) {
+    public_key, sender, }) {
         this._hash = ["", last_hash || null, reference_hash || null];
         this._data = [null, {}]; // object as 2nd part so that we can expand this
-        this._type = new TYPE(tags, money, data);
         this._initial_balance = initial_balance || 0;
         this._money = money || 0;
         this._data[0] = data || null;
@@ -56,9 +54,6 @@ export class Block {
     }
     get sender() {
         return this._sender;
-    }
-    get type() {
-        return this._type;
     }
     get nonce() {
         return this._nonce;

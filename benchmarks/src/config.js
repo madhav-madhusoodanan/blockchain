@@ -13,64 +13,6 @@ export const GENESIS_DATA = {
     SENDER_PUBLIC: "0412254552711e5bbe936b1b66ff889966ff31d87a9ddd8f6061de7fc68ead1c1a6c25c3b9e56859eb51c1c5deb27cb30212c6db815d10a05b9a4c35bb9704bd6a",
     tags: ["genesis"],
 };
-export class TYPE {
-    _type;
-    constructor(tags, money, data) {
-        /* process all the tags */
-        if (!(tags instanceof Array))
-            tags = [];
-        tags.forEach((tag) => {
-            // check if we can reduce the size
-            if (money || data)
-                return "useful";
-            if (tag.search(/nft/) + 1 || (data && money))
-                return "nft";
-            else if (tag.search(/speed/) + 1 && !money)
-                return "speed";
-            else if (tag.search(/db/) + 1 && !money)
-                return "db";
-            else if (tag.search(/contract/) + 1 && !money)
-                return "contract";
-            else if (tag.search(/noreply/) + 1 && !money)
-                return "noreply";
-            else if (tag.search(/loan/) + 1 && !money)
-                return "loan";
-            else
-                return "spam";
-        });
-        this._type = tags || [];
-        // add additional checks
-    }
-    // return true if yes, false if no
-    get is_spam() {
-        return this._type.find((tag) => tag === "spam");
-    }
-    get is_nft() {
-        return this._type.find((tag) => tag === "nft");
-    }
-    get is_database() {
-        return this._type.find((tag) => tag === "db");
-    }
-    get is_contract() {
-        return this._type.find((tag) => tag === "contract");
-    }
-    get is_speed() {
-        return this._type.find((tag) => tag === "speed");
-    }
-    get is_no_reply() {
-        return this._type.find((tag) => tag === "noreply");
-    }
-}
-export var TYPE_enum;
-(function (TYPE_enum) {
-    TYPE_enum["nft"] = "nft";
-    TYPE_enum["speed"] = "speed";
-    TYPE_enum["contract"] = "contract";
-    TYPE_enum["noreply"] = "noreply";
-    TYPE_enum["spam"] = "spam";
-    TYPE_enum["db"] = "db";
-    TYPE_enum["loan"] = "loan";
-})(TYPE_enum || (TYPE_enum = {}));
 export const STARTING_BALANCE = 1000;
 export const REWARD_INPUT = {
     address: "oracle",

@@ -10,8 +10,8 @@
  * 1. Only the blockchain owner (user) has the power to write their own blockchain
  */
 // const Block = require("./block");
-import { verify_block } from "../util/index.js";
-import { Block } from "./block.js";
+import { verify_block } from "../util";
+import { Block } from "./block";
 export class Blockchain {
     chain;
     constructor() {

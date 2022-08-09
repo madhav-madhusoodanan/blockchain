@@ -15,7 +15,7 @@ import { Block } from "./block";
 import { Blockchain } from "./blockchain";
 import { Block_pool } from "./block_pool";
 import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util";
-import { TYPE_enum, Receiver_Address, GENESIS_DATA } from "./config";
+import { Receiver_Address, GENESIS_DATA } from "./config";
 
 export class Account {
     // declaration of private fields
@@ -78,13 +78,11 @@ export class Account {
         data,
         reference_hash,
         receiver_address,
-        tags,
     }: {
         money: number;
         data?: any;
         reference_hash?: string;
         receiver_address: Receiver_Address;
-        tags: TYPE_enum[];
     }) {
         // receiver_address is an array of public keys
         // keep tight block validity checking here
@@ -118,7 +116,7 @@ export class Account {
                 last_hash,
                 public_key: random_key.getPublic().encode("hex") as string, // let this specifically be of type point
                 sender: this._key_pair.getPublic().encode("hex") as string,
-                tags: tags as TYPE_enum[],
+
             });
         } else if (receiver_address.length === 1) {
             // receive block
@@ -131,7 +129,6 @@ export class Account {
                 last_hash,
                 public_key: null,
                 sender: this._key_pair.getPublic().encode("hex"),
-                tags,
             });
         } else return null;
 
@@ -148,11 +145,9 @@ export class Account {
     send_large_data({
         data,
         receiver_address,
-        tags,
     }: {
         data: any;
         receiver_address: Receiver_Address;
-        tags: TYPE_enum[];
     }) {
         // break the data into smaller chunks to
         let data_chunk: any;
@@ -163,7 +158,6 @@ export class Account {
                     money: 0,
                     data: data_chunk,
                     receiver_address,
-                    tags: [TYPE_enum.speed].concat(tags),
                 })
             );
         return arr;
@@ -172,12 +166,10 @@ export class Account {
         money,
         data,
         receiver_address,
-        tags /* only for independent types */,
     }: {
         money: number;
         data: any;
         receiver_address: Receiver_Address;
-        tags: TYPE_enum[];
     }) {
         if (
             // guard clauses
@@ -189,12 +181,11 @@ export class Account {
             return null;
         try {
             if (money < 0 || money === Infinity) money = 0;
-            else if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
+            else if (!money) {
                 const block = this.create_block({
                     money: 0,
                     data,
                     receiver_address,
-                    tags,
                 });
 
                 if (Block.is_valid(block) && verify_block(block)) return block;
@@ -209,7 +200,6 @@ export class Account {
                     money: money > balance ? -1 * balance : -1 * money,
                     data,
                     receiver_address,
-                    tags,
                 });
 
                 if (Block.is_valid(block) && verify_block(block)) {
@@ -242,7 +232,6 @@ export class Account {
                     money: -1 * block.money, // transform the block money to +ve number
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
-                    tags: [],
                 });
                 if (new_block instanceof Block) return new_block;
                 else return;

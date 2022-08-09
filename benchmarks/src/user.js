@@ -30,12 +30,11 @@
  * 1. Make the signature in such a way that its existing methods are not replaced
  *      when the cryptography is changed to a post-quantum cryptography type
  */
-import { Block } from "./block.js";
-import { Block_pool } from "./block_pool.js";
-import { Account } from "./account.js";
-import { Comm } from "./comm.js";
-import { TYPE_enum } from "./config.js";
-import { SHA256, genKeyPair, genPublic, verify_block } from "../util/index.js";
+import { Block } from "./block";
+import { Block_pool } from "./block_pool";
+import { Account } from "./account";
+import { Comm } from "./comm";
+import { SHA256, genKeyPair, genPublic, verify_block } from "../util";
 export class User {
     // declaration of private fields
     _key_pair;
@@ -85,7 +84,7 @@ export class User {
             return 0;
         return this._accounts.reduce((prev_total, account) => prev_total + account.balance, 0);
     }
-    send_large_data({ data, receiver_address, tags, }) {
+    send_large_data({ data, receiver_address, }) {
         // break the data into smaller chunks to
         let data_chunk;
         while (data_chunk)
@@ -93,20 +92,18 @@ export class User {
                 money: 0,
                 data: data_chunk,
                 receiver_address: receiver_address,
-                tags: [TYPE_enum.speed].concat(tags),
             });
     }
-    send({ money, data, receiver_address, tags /* only for independent types */, }) {
+    send({ money, data, receiver_address, }) {
         try {
             let i = 0;
             if (money < 0 || money === Infinity)
                 money = 0;
-            if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
+            if (!money) {
                 const block = this._accounts[0].create_block({
                     money: 0,
                     data,
                     receiver_address,
-                    tags,
                 });
                 if (Block.is_valid(block) && verify_block(block))
                     this.comm.send(block);
@@ -123,7 +120,6 @@ export class User {
                         money: money > balance ? -1 * balance : -1 * money,
                         data,
                         receiver_address,
-                        tags,
                     });
                     if (Block.is_valid(block) && verify_block(block)) {
                         money += block.money;
@@ -174,7 +170,6 @@ export class User {
                     money: -1 * block.money,
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
-                    tags: [],
                 });
                 if (new_block) {
                     this._accounts.push(account);
@@ -189,7 +184,6 @@ export class User {
                     money: -1 * block.money,
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
-                    tags: [],
                 });
                 if (new_block)
                     return { block: new_block, private_key };

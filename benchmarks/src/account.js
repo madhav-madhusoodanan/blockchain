@@ -11,11 +11,11 @@
  * it gives the money to the account in the start
  * can generate money just like that
  */
-import { Block } from "./block.js";
-import { Blockchain } from "./blockchain.js";
-import { Block_pool } from "./block_pool.js";
-import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util/index.js";
-import { TYPE_enum, GENESIS_DATA } from "./config.js";
+import { Block } from "./block";
+import { Blockchain } from "./blockchain";
+import { Block_pool } from "./block_pool";
+import { genKeyPair, SHA256, genPublic, random, verify_block } from "../util";
+import { GENESIS_DATA } from "./config";
 export class Account {
     // declaration of private fields
     _key_pair;
@@ -60,7 +60,7 @@ export class Account {
         let data = random();
         return [this.public_key, data, this.sign(data)];
     }
-    create_block({ money, data, reference_hash, receiver_address, tags, }) {
+    create_block({ money, data, reference_hash, receiver_address, }) {
         // receiver_address is an array of public keys
         // keep tight block validity checking here
         // create a one-time receiver_address and signatures too
@@ -94,7 +94,6 @@ export class Account {
                 last_hash,
                 public_key: random_key.getPublic().encode("hex"),
                 sender: this._key_pair.getPublic().encode("hex"),
-                tags: tags,
             });
         }
         else if (receiver_address.length === 1) {
@@ -108,7 +107,6 @@ export class Account {
                 last_hash,
                 public_key: null,
                 sender: this._key_pair.getPublic().encode("hex"),
-                tags,
             });
         }
         else
@@ -122,7 +120,7 @@ export class Account {
         // else make just a normal signature
         return this._key_pair.sign(data_chunk).toDER("hex");
     }
-    send_large_data({ data, receiver_address, tags, }) {
+    send_large_data({ data, receiver_address, }) {
         // break the data into smaller chunks to
         let data_chunk;
         const arr = [];
@@ -131,11 +129,10 @@ export class Account {
                 money: 0,
                 data: data_chunk,
                 receiver_address,
-                tags: [TYPE_enum.speed].concat(tags),
             }));
         return arr;
     }
-    send({ money, data, receiver_address, tags /* only for independent types */, }) {
+    send({ money, data, receiver_address, }) {
         if (
         // guard clauses
         !this.standalone &&
@@ -146,12 +143,11 @@ export class Account {
         try {
             if (money < 0 || money === Infinity)
                 money = 0;
-            else if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
+            else if (!money) {
                 const block = this.create_block({
                     money: 0,
                     data,
                     receiver_address,
-                    tags,
                 });
                 if (Block.is_valid(block) && verify_block(block))
                     return block;
@@ -167,7 +163,6 @@ export class Account {
                     money: money > balance ? -1 * balance : -1 * money,
                     data,
                     receiver_address,
-                    tags,
                 });
                 if (Block.is_valid(block) && verify_block(block)) {
                     money += block.money;
@@ -201,7 +196,6 @@ export class Account {
                 money: -1 * block.money,
                 reference_hash: block.hash[0],
                 receiver_address: [block.sender],
-                tags: [],
             });
             if (new_block instanceof Block)
                 return new_block;

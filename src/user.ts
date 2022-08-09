@@ -34,7 +34,7 @@ import { Block } from "./block";
 import { Block_pool } from "./block_pool";
 import { Account } from "./account";
 import { Comm } from "./comm";
-import { TYPE_enum, Receiver_Address } from "./config";
+import { Receiver_Address } from "./config";
 import { SHA256, genKeyPair, genPublic, verify_block } from "../util";
 
 interface Received {
@@ -116,11 +116,9 @@ export class User {
     send_large_data({
         data,
         receiver_address,
-        tags,
     }: {
         data: any;
         receiver_address: Receiver_Address;
-        tags: TYPE_enum[];
     }) {
         // break the data into smaller chunks to
         let data_chunk: any;
@@ -129,30 +127,26 @@ export class User {
                 money: 0,
                 data: data_chunk as any,
                 receiver_address: receiver_address as Receiver_Address,
-                tags: [TYPE_enum.speed].concat(tags),
             });
     }
     send({
         money,
         data,
         receiver_address,
-        tags /* only for independent types */,
     }: /* sender account preferences */
     {
         money: number;
         data: any;
         receiver_address: Receiver_Address;
-        tags: TYPE_enum[];
     }) {
         try {
             let i = 0;
             if (money < 0 || money === Infinity) money = 0;
-            if (!money && "speed" in tags /* check for HIGH_SPEED tag */) {
+            if (!money) {
                 const block = this._accounts[0].create_block({
                     money: 0,
                     data,
                     receiver_address,
-                    tags,
                 });
 
                 if (Block.is_valid(block) && verify_block(block))
@@ -169,7 +163,6 @@ export class User {
                         money: money > balance ? -1 * balance : -1 * money,
                         data,
                         receiver_address,
-                        tags,
                     });
 
                     if (Block.is_valid(block) && verify_block(block)) {
@@ -226,7 +219,6 @@ export class User {
                     money: -1 * block.money, // transform the block money to +ve number
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
-                    tags: [] as TYPE_enum[],
                 });
                 if (new_block) {
                     this._accounts.push(account);
@@ -238,7 +230,6 @@ export class User {
                     money: -1 * block.money, // transform the block money
                     reference_hash: block.hash[0],
                     receiver_address: [block.sender],
-                    tags: [],
                 });
                 if (new_block) return {block: new_block, private_key};
                 else return;

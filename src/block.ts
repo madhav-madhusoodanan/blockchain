@@ -11,7 +11,7 @@
  * 4. receiver is of type bignum
  */
 import { SHA256 } from "../util"
-import { DIFFICULTY, BET_KEEPING_KEY, TYPE, TYPE_enum} from "./config"
+import { DIFFICULTY, BET_KEEPING_KEY} from "./config"
 import {  GENESIS_DATA } from "./config"
 
 const {LAST_HASH, SENDER_PUBLIC} = GENESIS_DATA
@@ -25,7 +25,6 @@ interface Block_Args {
     reference_hash?: string // for receive blocks to reference send blocks
     public_key: string | null
     sender: string
-    tags: TYPE_enum[]
 }
 
 interface Hash {
@@ -49,7 +48,6 @@ export class Block {
     private _public_key: string | null
     private _nonce!: number
     private _hash: Hash
-    private _type: TYPE
     private _sender: string
 
     constructor({
@@ -61,11 +59,9 @@ export class Block {
         reference_hash, // for receive blocks to reference send blocks
         public_key,
         sender,
-        tags,
     }: Block_Args) {
         this._hash = ["", last_hash || null, reference_hash || null]
         this._data = [null, {}] // object as 2nd part so that we can expand this
-        this._type = new TYPE(tags, money, data)
         this._initial_balance = initial_balance || 0
         this._money = money || 0
         this._data[0] = data || null
@@ -93,9 +89,6 @@ export class Block {
     }
     public get sender(): string {
         return this._sender
-    }
-    public get type(): TYPE {
-        return this._type
     }
     public get nonce(): number {
         return this._nonce

@@ -95,7 +95,6 @@ export class Block_pool {
         new_send.forEach((send) => {
             // switching on just the new send blocks will cover the old send blocks too
             if (!send) return;
-            if (send.type.is_no_reply) return;
             if (
                 this.recycle_bin.find(
                     (hash) => hash === send.hash[0].substring(0, 20)

@@ -17,57 +17,6 @@ export const GENESIS_DATA = {
     tags: ["genesis"],
 };
 
-export class TYPE {
-    private _type: string[];
-    constructor(tags: string[], money: number, data: any) {
-        /* process all the tags */
-        if (!(tags instanceof Array)) tags = [];
-        tags.forEach((tag) => {
-            // check if we can reduce the size
-            if (money || data) return "useful";
-            if (tag.search(/nft/) + 1 || (data && money)) return "nft";
-            else if (tag.search(/speed/) + 1 && !money) return "speed";
-            else if (tag.search(/db/) + 1 && !money) return "db";
-            else if (tag.search(/contract/) + 1 && !money) return "contract";
-            else if (tag.search(/noreply/) + 1 && !money) return "noreply";
-            else if (tag.search(/loan/) + 1 && !money) return "loan";
-            else return "spam";
-        });
-        this._type = tags || [];
-        // add additional checks
-    }
-
-    // return true if yes, false if no
-    get is_spam() {
-        return this._type.find((tag: string) => tag === "spam");
-    }
-    get is_nft() {
-        return this._type.find((tag: string) => tag === "nft");
-    }
-    get is_database() {
-        return this._type.find((tag: string) => tag === "db");
-    }
-    get is_contract() {
-        return this._type.find((tag: string) => tag === "contract");
-    }
-    get is_speed() {
-        return this._type.find((tag: string) => tag === "speed");
-    }
-    get is_no_reply() {
-        return this._type.find((tag: string) => tag === "noreply");
-    }
-}
-
-export enum TYPE_enum {
-    nft = "nft",
-    speed = "speed",
-    contract = "contract",
-    noreply = "noreply",
-    spam = "spam",
-    db = "db",
-    loan = "loan",
-}
-
 export const STARTING_BALANCE = 1000;
 
 export const REWARD_INPUT = {

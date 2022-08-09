@@ -11,6 +11,5 @@ export {
     REWARD_INPUT,
     MINING_REWARD,
     DIFFICULTY,
-    TYPE,
     BET_KEEPING_KEY,
 } from "./config" ;

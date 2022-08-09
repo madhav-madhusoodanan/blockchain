@@ -1,7 +1,7 @@
-import pkg from "elliptic";
-const {ec: EC} = pkg;
-export { SHA256 } from "./crypto-hash.js";
-export const curve = new EC("ed25519");
+const EC = require("elliptic").ec;
+export { SHA256 } from "./crypto-hash";
+export const curve = new EC("secp256k");
+// export const curve = new EC("ed25519");
 import crypto from "crypto";
 export const roughSizeOfObject = (object) => {
     var objectList = [];
